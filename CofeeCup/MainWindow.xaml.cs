@@ -25,6 +25,11 @@ namespace CofeeCup
         public MainWindow()
         {
             InitializeComponent();
+            string CLIENT_ID = "19361090870.apps.googleusercontent.com";
+            string CLIENT_SECRET = "CZuF5r88V_6JGsP3pFlnoYDl";
+
+            OAuth2Parameters parameters = new OAuth2Parameters();
+
         }
     }
 }
