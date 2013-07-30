@@ -5,6 +5,8 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Google.GData.Client;
+using Google.GData.Spreadsheets;
 
 namespace CofeeCup
 {
@@ -13,5 +15,21 @@ namespace CofeeCup
     /// </summary>
     public partial class App : Application
     {
-    }
+        public OAuth2Parameters parameters = new OAuth2Parameters();
+        public string GAuth2()
+        {
+            string CLIENT_ID = "19361090870.apps.googleusercontent.com";
+            string CLIENT_SECRET = "CZuF5r88V_6JGsP3pFlnoYDl";
+            string REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
+            string SCOPE = "https://spreadsheets.google.com/feeds https://docs.google.com/feeds/";            
+            parameters.ClientId = CLIENT_ID;
+            parameters.ClientSecret = CLIENT_SECRET;
+            parameters.RedirectUri = REDIRECT_URI;
+            parameters.Scope = SCOPE;
+            return OAuthUtil.CreateOAuth2AuthorizationUrl(parameters);
+        }
+
+    } 
+    
 }
+

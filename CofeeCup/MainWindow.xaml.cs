@@ -15,8 +15,6 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Forms;
-using Google.GData.Client;
-using Google.GData.Spreadsheets;
 
 namespace CofeeCup
 {
@@ -28,10 +26,6 @@ namespace CofeeCup
         public MainWindow()
         {
             InitializeComponent();
-            string CLIENT_ID = "19361090870.apps.googleusercontent.com";
-            string CLIENT_SECRET = "CZuF5r88V_6JGsP3pFlnoYDl";
-            OAuth2Parameters parameters = new OAuth2Parameters();
-
         }
 
         private void FolderBrowserButtonClick(object sender, RoutedEventArgs e)
@@ -40,16 +34,18 @@ namespace CofeeCup
             FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) 
             { 
-                string Folder_path = dialog.SelectedPath;
-                FolderPath.Text = Folder_path;
+                FolderPath.Text = dialog.SelectedPath;
             } 
+        }
+        private void MainOKClick(object sender, RoutedEventArgs e)
+        {
+            AuthWindow tAuthWindow = new AuthWindow();
+            tAuthWindow.Show();
+            this.Close();
         }
         private void AppExit(object sender, RoutedEventArgs e)
         {
             System.Windows.Application.Current.Shutdown();
-        }
-        private void MainOKClick(object sender, RoutedEventArgs e)
-        {
         }
     }
 }
