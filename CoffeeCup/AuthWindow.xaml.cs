@@ -30,8 +30,6 @@ namespace CoffeeCup
         {
             app.parameters.AccessCode = GAccessCode.Text;
             app.GAuthStep2();
-            ListSpreadsheets tListSpredsheets = new ListSpreadsheets();
-            tListSpredsheets.Show();
             this.Close();
         }
     }
