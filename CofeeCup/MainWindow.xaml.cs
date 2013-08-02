@@ -42,6 +42,7 @@ namespace CoffeeCup
         {
             AuthWindow tAuthWindow = new AuthWindow();
             app.DocUri = DocUri.Text;
+            app.wsID = WSID.Text;
             tAuthWindow.Show();
             this.Close();
         }

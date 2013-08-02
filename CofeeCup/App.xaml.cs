@@ -23,9 +23,9 @@ namespace CoffeeCup
         string SCOPE = "https://spreadsheets.google.com/feeds https://docs.google.com/feeds/"; 
         public OAuth2Parameters parameters = new OAuth2Parameters();
         public string DocUri; //Document key
+        public string wsID; //WorksheetID
         GOAuth2RequestFactory GRequestFactory;
         SpreadsheetsService GSpreadsheetService;
-        CellQuery cellQuery;   
         public string GetGAuthLink()
         {
             parameters.ClientId = CLIENT_ID;
@@ -41,13 +41,6 @@ namespace CoffeeCup
             GSpreadsheetService = new SpreadsheetsService("CoffeeCup");
             GSpreadsheetService.RequestFactory = GRequestFactory;
         }
-        public void FindWorksheet(ref Stream xmlstream)
-        {
-            SpreadsheetQuery query = new SpreadsheetQuery();
-            SpreadsheetFeed feed = GSpreadsheetService.Query(query);
-            feed.SaveToXml(xmlstream);
-        }
-
     }   
 }
 

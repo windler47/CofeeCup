@@ -26,12 +26,10 @@ namespace CoffeeCup
         public ListSpreadsheets()
         {
             InitializeComponent();
-            Stream xmlstream = new Stream();
-            app.FindWorksheet(ref xmlstream);
-            XmlReader xmlFile = XmlReader.Create(xmlstream);
+            XmlReader xmlFile = XmlReader.Create(app.FindWorksheet());
             DataSet ds = new DataSet();
             ds.ReadXml(xmlFile);
-            dataGrid1.ItemsSource = ds.Tables;
+            dataGrid1.ItemsSource = ds.Tables["title"];
         }
     }
 }
