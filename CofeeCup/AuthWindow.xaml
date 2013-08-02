@@ -1,4 +1,4 @@
-﻿<Window x:Class="CofeeCup.AuthWindow"
+﻿<Window x:Class="CoffeeCup.AuthWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="AuthWindow" Height="225" Width="300">
@@ -13,6 +13,6 @@
         </Grid.ColumnDefinitions>
         <TextBox x:Name="textAuthUrl" Background="Transparent" BorderThickness="0"  IsReadOnly="True" TextWrapping="Wrap"/>
         <TextBox Grid.Row="1"  x:Name="GAccessCode" />
-        <Button Grid.Row="2" Click="AuthOKClick"></Button> 
+        <Button Grid.Row="2" Click="AuthOKClick" Content="Done"></Button> 
     </Grid>
 </Window>

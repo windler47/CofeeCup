@@ -11,28 +11,27 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.IO;
+using System.Xml;
+using System.Data;
 
 namespace CoffeeCup
 {
     /// <summary>
-    /// Логика взаимодействия для AuthWindow.xaml
+    /// Логика взаимодействия для Window1.xaml
     /// </summary>
-    public partial class AuthWindow : Window
+    public partial class ListSpreadsheets: Window
     {
         CoffeeCup.App app = (CoffeeCup.App)CoffeeCup.App.Current;
-        public AuthWindow()
+        public ListSpreadsheets()
         {
             InitializeComponent();
-            textAuthUrl.Text = app.GetGAuthLink();
-        }
-
-        private void AuthOKClick(object sender, RoutedEventArgs e)
-        {
-            app.parameters.AccessCode = GAccessCode.Text;
-            app.GAuthStep2();
-            ListSpreadsheets tListSpredsheets = new ListSpreadsheets();
-            tListSpredsheets.Show();
-            this.Close();
+            Stream xmlstream = new Stream();
+            app.FindWorksheet(ref xmlstream);
+            XmlReader xmlFile = XmlReader.Create(xmlstream);
+            DataSet ds = new DataSet();
+            ds.ReadXml(xmlFile);
+            dataGrid1.ItemsSource = ds.Tables;
         }
     }
 }

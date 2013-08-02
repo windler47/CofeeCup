@@ -5,31 +5,49 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.IO;
+//using System.Xml;
 using Google.GData.Client;
 using Google.GData.Spreadsheets;
 
-namespace CofeeCup
+namespace CoffeeCup
 {
     /// <summary>
     /// Логика взаимодействия для App.xaml
     /// </summary>
     public partial class App : Application
     {
+        string CLIENT_ID = "19361090870.apps.googleusercontent.com";
+        string CLIENT_SECRET = "CZuF5r88V_6JGsP3pFlnoYDl";
+        string REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
+        string SCOPE = "https://spreadsheets.google.com/feeds https://docs.google.com/feeds/"; 
         public OAuth2Parameters parameters = new OAuth2Parameters();
-        public string GAuth2()
+        public string DocUri; //Document key
+        GOAuth2RequestFactory GRequestFactory;
+        SpreadsheetsService GSpreadsheetService;
+        CellQuery cellQuery;   
+        public string GetGAuthLink()
         {
-            string CLIENT_ID = "19361090870.apps.googleusercontent.com";
-            string CLIENT_SECRET = "CZuF5r88V_6JGsP3pFlnoYDl";
-            string REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
-            string SCOPE = "https://spreadsheets.google.com/feeds https://docs.google.com/feeds/";            
             parameters.ClientId = CLIENT_ID;
             parameters.ClientSecret = CLIENT_SECRET;
             parameters.RedirectUri = REDIRECT_URI;
             parameters.Scope = SCOPE;
             return OAuthUtil.CreateOAuth2AuthorizationUrl(parameters);
         }
+        public void GAuthStep2()
+        {
+            OAuthUtil.GetAccessToken(parameters);
+            GRequestFactory = new GOAuth2RequestFactory(null, "CoffeeCup", parameters);
+            GSpreadsheetService = new SpreadsheetsService("CoffeeCup");
+            GSpreadsheetService.RequestFactory = GRequestFactory;
+        }
+        public void FindWorksheet(ref Stream xmlstream)
+        {
+            SpreadsheetQuery query = new SpreadsheetQuery();
+            SpreadsheetFeed feed = GSpreadsheetService.Query(query);
+            feed.SaveToXml(xmlstream);
+        }
 
-    } 
-    
+    }   
 }
 

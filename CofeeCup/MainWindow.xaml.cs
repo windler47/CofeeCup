@@ -16,13 +16,14 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Forms;
 
-namespace CofeeCup
+namespace CoffeeCup
 {
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
+        CoffeeCup.App app = (CoffeeCup.App)CoffeeCup.App.Current;
         public MainWindow()
         {
             InitializeComponent();
@@ -40,6 +41,7 @@ namespace CofeeCup
         private void MainOKClick(object sender, RoutedEventArgs e)
         {
             AuthWindow tAuthWindow = new AuthWindow();
+            app.DocUri = DocUri.Text;
             tAuthWindow.Show();
             this.Close();
         }
