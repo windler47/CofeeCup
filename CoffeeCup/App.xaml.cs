@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.IO;
-//using System.Xml;
+using System.Xml;
 using Google.GData.Client;
 using Google.GData.Spreadsheets;
 
@@ -24,6 +24,7 @@ namespace CoffeeCup
         public OAuth2Parameters parameters = new OAuth2Parameters();
         public string DocUri; //Document key
         public string wsID; //WorksheetID
+        public string docPath; //Document Path
         GOAuth2RequestFactory GRequestFactory;
         SpreadsheetsService GSpreadsheetService;
         public string GetGAuthLink()
@@ -40,6 +41,12 @@ namespace CoffeeCup
             GRequestFactory = new GOAuth2RequestFactory(null, "CoffeeCup", parameters);
             GSpreadsheetService = new SpreadsheetsService("CoffeeCup");
             GSpreadsheetService.RequestFactory = GRequestFactory;
+        }
+        public void Read1cXml()
+        {
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.Load(docPath);
+
         }
     }   
 }
