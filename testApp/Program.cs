@@ -7,6 +7,21 @@ using System.Xml;
 
 namespace testApp
 {
+    class Customer
+    {
+        public string Name;
+        public string Address;
+        public string RGBCustomerID;
+        public string RicoCustomerID;
+    }
+    class Product
+    {
+
+    }
+    class Invoice
+    {
+
+    }
     class Program
     {
         static void Main(string[] args)
