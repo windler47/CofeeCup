@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.IO;
 using System.Xml;
+using System.Xml.Linq;
 using Google.GData.Client;
 using Google.GData.Spreadsheets;
 
@@ -42,12 +43,20 @@ namespace CoffeeCup
             GSpreadsheetService = new SpreadsheetsService("CoffeeCup");
             GSpreadsheetService.RequestFactory = GRequestFactory;
         }
-        public void Read1cXml()
+    }
+    public class Customer
+    {
+        public string Name;
+        public string City;
+        public Customer(string name)
         {
-            XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.Load(docPath);
-
+            Name = name;
         }
-    }   
+        public Customer(string name, string city)
+        {
+            Name = name;
+            City = city;
+        }
+    }
 }
 
