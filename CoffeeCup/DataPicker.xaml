@@ -1,8 +1,11 @@
 ﻿<Window x:Class="CoffeeCup.DataPicker"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:src="clr-namespace:CoffeeCup"
+        xmlns:CoffeCup ="clr-namespace:CoffeeCup"
         Title="DataPicker" Height="300" Width="300">
-    <Grid>
-    </Grid>
+    <DataGrid x:Name="tDataGrid" AutoGenerateColumns="True">
+        <!--<DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding Path=Values}"/>
+            </DataGrid.Columns>-->
+    </DataGrid>
 </Window>

@@ -28,6 +28,8 @@ namespace CoffeeCup
             InitializeComponent();
             XElement xmlDoc = XElement.Load(app.docPath);
             dgoods = GetGoods(xmlDoc);
+            this.DataContext = dgoods;
+            tDataGrid.ItemsSource = dgoods;
         }
         public static Dictionary<int, string> GetGoods(XElement xmlDoc)
         {

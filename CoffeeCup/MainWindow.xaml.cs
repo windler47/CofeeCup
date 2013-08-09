@@ -40,11 +40,13 @@ namespace CoffeeCup
         }
         private void MainOKClick(object sender, RoutedEventArgs e)
         {
-            AuthWindow tAuthWindow = new AuthWindow();
             app.DocUri = DocUri.Text;
             app.wsID = WSID.Text;
             app.docPath = FolderPath.Text;
-            tAuthWindow.Show();
+            //AuthWindow tAuthWindow = new AuthWindow();
+            //tAuthWindow.Show();
+            DataPicker tdataPicker = new DataPicker();
+            tdataPicker.Show();
             this.Close();
         }
         private void AppExit(object sender, RoutedEventArgs e)
