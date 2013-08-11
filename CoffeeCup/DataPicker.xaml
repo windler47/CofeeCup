@@ -2,10 +2,37 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:CoffeCup ="clr-namespace:CoffeeCup"
-        Title="DataPicker" Height="300" Width="300">
-    <DataGrid x:Name="tDataGrid" AutoGenerateColumns="True">
-        <!--<DataGrid.Columns>
-                <DataGridTextColumn Binding="{Binding Path=Values}"/>
-            </DataGrid.Columns>-->
-    </DataGrid>
+        Title="DataPicker" Height="300" Width="Auto">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+        <TabControl Grid.Row="0">
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Text="Контрагенты"/>
+                </TabItem.Header>
+                <TabItem.Content>
+                    <DataGrid x:Name="CustomersDataGrid" ItemsSource="{Binding}" AutoGenerateColumns="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Binding="{Binding Name}"/>
+                            <DataGridCheckBoxColumn Binding="{Binding IsUploaded, Mode=TwoWay}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem.Content>
+            </TabItem>
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Text="Номенклатура"/>
+                </TabItem.Header>
+                <TabItem.Content>
+                    <DataGrid x:Name="ProductsDataGrid" AutoGenerateColumns="True" IsManipulationEnabled="True"/>
+                </TabItem.Content>
+            </TabItem>
+        </TabControl>
+        <Button Content="OK"  Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,5,60,5"/>
+        <Button Content="Cancel" Grid.Row="1" VerticalAlignment="Center"  HorizontalAlignment="Right" Margin="0,5,5,5" Click="AppExit"/>
+
+    </Grid>
 </Window>
