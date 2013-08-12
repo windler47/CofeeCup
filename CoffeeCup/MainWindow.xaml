@@ -18,8 +18,8 @@
         <TextBox Grid.Row="0" Grid.Column="1" x:Name="DocUri"  Margin="5,5,5,5"/>
         <Label Grid.Row="1" Grid.Column="0" Content="WorksheetID" VerticalAlignment="Center"/>
         <TextBox Grid.Row="1" Grid.Column="1" x:Name="WSID" Margin="5,5,5,5"/>
-        <Label Grid.Row="2" Grid.Column="0" Content="Папка документов для выгрузки" VerticalAlignment="Center"/> 
-        <TextBox Grid.Row="2" Grid.Column="1" x:Name="FolderPath" Margin="5,5,30,5"/>
+        <Label Grid.Row="2" Grid.Column="0" Content="Папка документов для выгрузки" VerticalAlignment="Center"/>
+        <TextBox Grid.Row="2" Grid.Column="1" x:Name="FolderPath" Margin="5,5,30,5" Text="020813РБУ.xml"/>
         <Button  Grid.Row="2" Grid.Column="1" Click="FolderBrowserButtonClick" HorizontalAlignment="Right"  VerticalAlignment="Center" >
         <Image Source="foldericon.png" Height="20" Width="20"/>
         </Button>

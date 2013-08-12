@@ -44,19 +44,5 @@ namespace CoffeeCup
             GSpreadsheetService.RequestFactory = GRequestFactory;
         }
     }
-    public class Customer
-    {
-        public string Name;
-        public string City;
-        public Customer(string name)
-        {
-            Name = name;
-        }
-        public Customer(string name, string city)
-        {
-            Name = name;
-            City = city;
-        }
-    }
 }
 
