@@ -28,78 +28,14 @@ namespace CoffeeCup
         {
             InitializeComponent();
             XElement xmlDoc = XElement.Load(app.docPath);
-            xProducts = GetGoods(xmlDoc);
-            xCustomers = GetCustomers(xmlDoc);
+            xProducts = AppPublicFunctions.GetGoods(xmlDoc);
+            xCustomers = AppPublicFunctions.GetCustomers(xmlDoc);
             List<Customer> dCustomers = xCustomers.Values.ToList<Customer>();
             List<Product> dProducts = xProducts.Values.ToList<Product>();
             CustomersDataGrid.DataContext = dCustomers;
             ProductsDataGrid.DataContext = xProducts.Values;
         }
-        public static Dictionary<int, Product> GetGoods(XElement xmlDoc)
-        {
-            Dictionary<int, Product> result = new Dictionary<int, Product>();
-            IEnumerable<XElement> goods =
-                from fobject in xmlDoc.Elements("Объект")
-                where (string)fobject.Attribute("ИмяПравила") == "Номенклатура"
-                select fobject;
-
-            foreach (XElement el in goods)
-            {
-                #region Qery data from Xml
-                bool isGroup = (from el1 in el.Element("Ссылка").Elements("Свойство")
-                                where (string)el1.Attribute("Имя") == "ЭтоГруппа" && (string)el1.Element("Значение") == "true"
-                                select el1).Any();
-                if (isGroup) continue;
-                Product tproduct = new Product((string)(from el1 in el.Elements("Свойство")
-                                              where (string)el1.Attribute("Имя") == "Наименование"
-                                              select el1).ElementAt(0));
-                #endregion
-                result.Add((int)el.Element("Ссылка").Attribute("Нпп"),tproduct);
-            }
-            return result;
-        }
-        public static Dictionary<int, Customer> GetCustomers(XElement xmlDoc)
-        {
-            Dictionary<int, Customer> result = new Dictionary<int, Customer>();
-            IEnumerable<XElement> obj =
-                from fobject in xmlDoc.Elements("Объект")
-                where (string)fobject.Attribute("ИмяПравила") == "Контрагенты"
-                select fobject;
-            foreach (XElement el in obj)
-            {
-                bool isGroup = (from el1 in el.Element("Ссылка").Elements("Свойство")
-                                where (string)el1.Attribute("Имя") == "ЭтоГруппа" && (string)el1.Element("Значение") == "true"
-                                select el1).Any();
-                if (isGroup) continue;
-                Customer customer = new Customer((string)(from el1 in el.Elements("Свойство")
-                                                          where (string)el1.Attribute("Имя") == "Наименование"
-                                                          select el1).ElementAt(0));
-                result.Add((int)el.Element("Ссылка").Attribute("Нпп"), customer);
-            }
-            return result;
-        }
-        public static List<Realization> GetRealisations(XElement xmlDoc, Dictionary<int, Customer> Customers, Dictionary<int, Product> Products)
-        {
-            List<Realization> result = new List<Realization>();
-            IEnumerable<XElement> obj =
-                from fobject in xmlDoc.Elements("Объект")
-                where (string)fobject.Attribute("ИмяПравила") == "РеализацияТоваровУслуг"
-                select fobject;
-            foreach (XElement ProductRealisation in obj)
-            {
-                bool IsDelited = (from prop in ProductRealisation.Elements("Свойство")
-                                  where (string)prop.Attribute("Имя") == "ПометкаУдаления" && (string)prop.Element("Значение") == "true"
-                                  select prop).Any();
-
-                bool IsCommited = (from prop in ProductRealisation.Elements("Свойство")
-                                   where (string)prop.Attribute("Имя") == "Проведен" && (string)prop.Element("Значение") == "true"
-                                   select prop).Any();
-                if (IsDelited || !IsCommited) continue;
-
-
-            }
-            return result;
-        }
+            
         private void AppExit(object sender, RoutedEventArgs e)
         {
             System.Windows.Application.Current.Shutdown();
