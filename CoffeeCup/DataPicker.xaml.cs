@@ -90,17 +90,4 @@ namespace CoffeeCup
         }
         #endregion
     }
-    public class MultConverter : IValueConverter {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-            return ((int)value).ToString();
-        }
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
-            if (value != null) {
-                int res = 0;
-                res = int.Parse((string)value);
-                return res;
-            }
-            return 0;
-        }
-    }
 }

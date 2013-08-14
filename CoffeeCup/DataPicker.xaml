@@ -10,7 +10,6 @@
         <Style TargetType="DataGridCell">
             <EventSetter Event="PreviewMouseLeftButtonDown" Handler="DataGridCell_PreviewMouseLeftButtonDown"/>
         </Style>
-        <CoffeCup:MultConverter x:Key="MConverter" />
     </Window.Resources>
     <!--
           SINGLE CLICK EDITING END
@@ -46,7 +45,6 @@
                             <DataGridTextColumn  Header="Название" Binding="{Binding Name}" IsReadOnly="True"/>
                             <DataGridCheckBoxColumn Header="Выгружаемый" Binding="{Binding IsUploaded, Mode=TwoWay}"/>
                             <DataGridTextColumn Header="Множитель Капсул" Binding="{Binding CupsuleMult}"/>
-                            <!--<DataGridTextColumn Header="Множитель Капсул" Binding="{Binding CupsuleMult,Converter={StaticResource MConverter}}"/>-->
                             <DataGridTextColumn Header="Множитель Машин" Binding="{Binding MachMult, Mode=TwoWay}"/>
                         </DataGrid.Columns>
                     </DataGrid>
