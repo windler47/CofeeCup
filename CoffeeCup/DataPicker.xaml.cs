@@ -11,8 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using System.Xml;
-using System.Xml.Linq;
+using System.Globalization;
 
 namespace CoffeeCup
 {
@@ -21,24 +20,29 @@ namespace CoffeeCup
     /// </summary>
     public partial class DataPicker : Window
     {
-        CoffeeCup.App app = (CoffeeCup.App)CoffeeCup.App.Current;
+        CoffeeCup.App app = (CoffeeCup.App)App.Current;
         Dictionary<int, Product> xProducts = new Dictionary<int, Product>();
         Dictionary<int, Customer> xCustomers = new Dictionary<int, Customer>();
         public DataPicker()
         {
+
             InitializeComponent();
-            XElement xmlDoc = XElement.Load(app.docPath);
-            xProducts = AppPublicFunctions.GetGoods(xmlDoc);
-            xCustomers = AppPublicFunctions.GetCustomers(xmlDoc);
+            if (app.InitializedocPath())
+                //TODO: Write workaround
+                { MessageBox.Show("Произошла ошибка при открытии файла с данными"); }
+            xProducts = AppPublicFunctions.GetGoods(app);
+            xCustomers = AppPublicFunctions.GetCustomers(app);
             List<Customer> dCustomers = xCustomers.Values.ToList<Customer>();
             List<Product> dProducts = xProducts.Values.ToList<Product>();
             CustomersDataGrid.DataContext = dCustomers;
-            ProductsDataGrid.DataContext = xProducts.Values;
-        }
-            
+            ProductsDataGrid.DataContext = dProducts;
+        }    
         private void AppExit(object sender, RoutedEventArgs e)
         {
             System.Windows.Application.Current.Shutdown();
+        }
+        private void OkKlick(object sender, RoutedEventArgs e) {
+            MessageBox.Show("");
         }
         #region SINGLE CLICK EDITING
         private void DataGridCell_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -85,5 +89,18 @@ namespace CoffeeCup
             return null;
         }
         #endregion
+    }
+    public class MultConverter : IValueConverter {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+            return ((int)value).ToString();
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+            if (value != null) {
+                int res = 0;
+                res = int.Parse((string)value);
+                return res;
+            }
+            return 0;
+        }
     }
 }

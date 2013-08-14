@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Windows;
 
+
 namespace CoffeeCup
 {
     public class Customer
     {
         public string City { get; set; }
         public string Region { get; set; }
-        public string Name { get; set; }
+        public string Name { get; private set; }
         public bool IsUploaded { get; set; }
         public Customer(string name)
         {
@@ -26,15 +27,20 @@ namespace CoffeeCup
             Region = region;
             IsUploaded = true;
         }
+        private Customer() { }
     }
     public class Product
     {
-        public string Name { get; set; }
+        public string Name { get; private set; }
+        public int CupsuleMult { get; set; }
+        public int MachMult { get; set; }
         public bool IsUploaded { get; set; }
         public Product(string name)
         {
             Name = name;
+            CupsuleMult = 1;
         }
+        private Product() { }
     }
     public class SellingPosition
     {
@@ -51,11 +57,11 @@ namespace CoffeeCup
     }
     public static class AppPublicFunctions
     {
-        public static Dictionary<int, Product> GetGoods(XElement xmlDoc)
+        public static Dictionary<int, Product> GetGoods(CoffeeCup.App app)
         {
             Dictionary<int, Product> result = new Dictionary<int, Product>();
             IEnumerable<XElement> goods =
-                from fobject in xmlDoc.Elements("Объект")
+                from fobject in app.xmlDoc.Elements("Объект")
                 where (string)fobject.Attribute("ИмяПравила") == "Номенклатура"
                 select fobject;
 
@@ -74,11 +80,11 @@ namespace CoffeeCup
             }
             return result;
         }
-        public static Dictionary<int, Customer> GetCustomers(XElement xmlDoc)
+        public static Dictionary<int, Customer> GetCustomers(CoffeeCup.App app)
         {
             Dictionary<int, Customer> result = new Dictionary<int, Customer>();
             IEnumerable<XElement> obj =
-                from fobject in xmlDoc.Elements("Объект")
+                from fobject in app.xmlDoc.Elements("Объект")
                 where (string)fobject.Attribute("ИмяПравила") == "Контрагенты"
                 select fobject;
             foreach (XElement el in obj)
@@ -94,11 +100,11 @@ namespace CoffeeCup
             }
             return result;
         }
-        public static List<Realization> GetRealisations(XElement xmlDoc, Dictionary<int, Customer> Customers, Dictionary<int, Product> Products)
+        public static List<Realization> GetRealisations(CoffeeCup.App app, Dictionary<int, Customer> Customers, Dictionary<int, Product> Products)
         {
             List<Realization> result = new List<Realization>();
             IEnumerable<XElement> obj =
-                from fobject in xmlDoc.Elements("Объект")
+                from fobject in app.xmlDoc.Elements("Объект")
                 where (string)fobject.Attribute("ИмяПравила") == "РеализацияТоваровУслуг"
                 select fobject;
             foreach (XElement ProductRealisation in obj)
@@ -159,4 +165,5 @@ namespace CoffeeCup
             return result;
         }
     }
+
 }

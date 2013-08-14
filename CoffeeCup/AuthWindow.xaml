@@ -8,11 +8,9 @@
             <RowDefinition Height="75"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
         <TextBox x:Name="textAuthUrl" Background="Transparent" BorderThickness="0"  IsReadOnly="True" TextWrapping="Wrap"/>
         <TextBox Grid.Row="1"  x:Name="GAccessCode" />
-        <Button Grid.Row="2" Click="AuthOKClick" Content="Done"></Button> 
+        <Button Grid.Row="2" Click="AuthOKClick" Content="Done" HorizontalAlignment="Left" Width="145"/>
+        <Button Grid.Row="2" Click="AppExit" Content="Cancel" HorizontalAlignment="Right" Width="145"/>
     </Grid>
 </Window>

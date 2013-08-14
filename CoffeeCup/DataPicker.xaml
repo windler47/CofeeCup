@@ -10,11 +10,12 @@
         <Style TargetType="DataGridCell">
             <EventSetter Event="PreviewMouseLeftButtonDown" Handler="DataGridCell_PreviewMouseLeftButtonDown"/>
         </Style>
+        <CoffeCup:MultConverter x:Key="MConverter" />
     </Window.Resources>
     <!--
           SINGLE CLICK EDITING END
         -->
-    <Grid  Height="{Binding RenderSize.ActualHeight, RelativeSource={RelativeSource AncestorType={x:Type Window}}}">
+    <Grid Width="Auto">
         <Grid.RowDefinitions>
             <RowDefinition/>
             <RowDefinition Height="30"/>
@@ -44,12 +45,15 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn  Header="Название" Binding="{Binding Name}" IsReadOnly="True"/>
                             <DataGridCheckBoxColumn Header="Выгружаемый" Binding="{Binding IsUploaded, Mode=TwoWay}"/>
+                            <DataGridTextColumn Header="Множитель Капсул" Binding="{Binding CupsuleMult}"/>
+                            <!--<DataGridTextColumn Header="Множитель Капсул" Binding="{Binding CupsuleMult,Converter={StaticResource MConverter}}"/>-->
+                            <DataGridTextColumn Header="Множитель Машин" Binding="{Binding MachMult, Mode=TwoWay}"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </TabItem.Content>
             </TabItem>
         </TabControl>
-        <Button Content="OK"  Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,5,60,5"/>
+        <Button Content="OK"  Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,5,60,5" Click="OkKlick"/>
         <Button Content="Cancel" Grid.Row="1" VerticalAlignment="Center"  HorizontalAlignment="Right" Margin="0,5,5,5" Click="AppExit"/>
 
     </Grid>

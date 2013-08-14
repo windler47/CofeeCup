@@ -10,6 +10,7 @@ using System.Xml;
 using System.Xml.Linq;
 using Google.GData.Client;
 using Google.GData.Spreadsheets;
+using System.Security;
 
 namespace CoffeeCup
 {
@@ -26,6 +27,7 @@ namespace CoffeeCup
         public string DocUri; //Document key
         public string wsID; //WorksheetID
         public string docPath; //Document Path
+        public XElement xmlDoc; 
         GOAuth2RequestFactory GRequestFactory;
         SpreadsheetsService GSpreadsheetService;
         public string GetGAuthLink()
@@ -42,6 +44,26 @@ namespace CoffeeCup
             GRequestFactory = new GOAuth2RequestFactory(null, "CoffeeCup", parameters);
             GSpreadsheetService = new SpreadsheetsService("CoffeeCup");
             GSpreadsheetService.RequestFactory = GRequestFactory;
+        }
+        public bool InitializedocPath()
+        {
+            bool result = false;
+            try {           
+                xmlDoc = XElement.Load(docPath);
+            }
+            catch (ArgumentNullException) {
+                MessageBox.Show("Не указан путь к файлу с данными для выгрузки");
+                result = true;
+            }
+            catch (SecurityException) {
+                MessageBox.Show("Недостаточно прав для обращения к файлу " + docPath);
+                result = true;
+            }
+            catch (FileNotFoundException) {
+                MessageBox.Show("Файл " + docPath + "не найден.");
+                result = true;
+            }
+            return result;
         }
     }
 }

@@ -25,12 +25,16 @@ namespace CoffeeCup
             InitializeComponent();
             textAuthUrl.Text = app.GetGAuthLink();
         }
-
         private void AuthOKClick(object sender, RoutedEventArgs e)
         {
             app.parameters.AccessCode = GAccessCode.Text;
             app.GAuthStep2();
+            DataPicker tDataPicker = new DataPicker();
+            tDataPicker.Show();
             this.Close();
+        }
+        private void AppExit(object sender, RoutedEventArgs e) {
+            System.Windows.Application.Current.Shutdown();
         }
     }
 }

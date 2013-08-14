@@ -41,7 +41,7 @@ namespace CoffeeCup
         private void MainOKClick(object sender, RoutedEventArgs e)
         {
             app.DocUri = DocUri.Text;
-            app.wsID = WSID.Text;
+            //app.wsID = WSID.Text;
             app.docPath = FolderPath.Text;
             //AuthWindow tAuthWindow = new AuthWindow();
             //tAuthWindow.Show();
