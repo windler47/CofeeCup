@@ -287,7 +287,7 @@ namespace CoffeeCup {
             CellFeed batchRequest = new CellFeed(cellQuery.Uri, GSpreadsheetService);
             foreach (CellAddress cellID in Address_Value.Keys) {
                 CellEntry batchEntry = Address_Cell[cellID.IdString];
-                if (batchEntry.InputValue=="") {
+                if (batchEntry.InputValue == "") {
                     batchEntry.InputValue = "=" + Address_Value[cellID];
                 }
                 else {
@@ -334,11 +334,9 @@ namespace CoffeeCup {
             SaveGRefreshToken(parameters.RefreshToken);
             this.Shutdown();
         }
-        private static Dictionary<String, CellEntry> GetCellEntryMap(SpreadsheetsService service, CellFeed cellFeed, List<CellAddress> cellAddrs) 
-        {
+        private static Dictionary<String, CellEntry> GetCellEntryMap(SpreadsheetsService service, CellFeed cellFeed, List<CellAddress> cellAddrs) {
             CellFeed batchRequest = new CellFeed(new Uri(cellFeed.Self), service);
-            foreach (CellAddress cellId in cellAddrs) 
-            {
+            foreach (CellAddress cellId in cellAddrs) {
                 CellEntry batchEntry = new CellEntry(cellId.Row, cellId.Col, cellId.IdString);
                 batchEntry.Id = new AtomId(string.Format("{0}/{1}", cellFeed.Self, cellId.IdString));
                 batchEntry.BatchData = new GDataBatchEntryData(cellId.IdString, GDataBatchOperationType.query);
@@ -348,8 +346,7 @@ namespace CoffeeCup {
             CellFeed queryBatchResponse = (CellFeed)service.Batch(batchRequest, new Uri(cellFeed.Batch));
 
             Dictionary<String, CellEntry> cellEntryMap = new Dictionary<String, CellEntry>();
-            foreach (CellEntry entry in queryBatchResponse.Entries) 
-            {
+            foreach (CellEntry entry in queryBatchResponse.Entries) {
                 cellEntryMap.Add(entry.BatchData.Id, entry);
             }
             return cellEntryMap;
