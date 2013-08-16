@@ -1,16 +1,24 @@
 ﻿<Window x:Class="CoffeeCup.AuthWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="AuthWindow" Height="225" Width="300">
-    <Grid>
+        xmlns:CoffeCup ="clr-namespace:CoffeeCup"
+        Title="AuthWindow" Width="300" SizeToContent="Height">
+    <Window.Resources>
+        <CoffeCup:HalfConverter x:Key="ButtonConverter"/>
+    </Window.Resources>
+    <Grid x:Name="grid">
         <Grid.RowDefinitions>
-            <RowDefinition Height="75"/>
-            <RowDefinition Height="75"/>
+            <RowDefinition/>
+            <RowDefinition Height="60"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
-        <TextBox x:Name="textAuthUrl" Background="Transparent" BorderThickness="0"  IsReadOnly="True" TextWrapping="Wrap"/>
+        <TextBlock  VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Hyperlink x:Name="AuthUrl" RequestNavigate="Hyperlink_RequestNavigate">
+                <TextBlock x:Name="textAuthUrl" TextWrapping="Wrap"/>
+            </Hyperlink>
+        </TextBlock>
         <TextBox Grid.Row="1"  x:Name="GAccessCode" />
-        <Button Grid.Row="2" Click="AuthOKClick" Content="Done" HorizontalAlignment="Left" Width="145"/>
-        <Button Grid.Row="2" Click="AppExit" Content="Cancel" HorizontalAlignment="Right" Width="145"/>
+        <Button Grid.Row="2" Click="AuthOKClick" Content="Done" HorizontalAlignment="Left" Width="{Binding ActualWidth, ElementName=grid, Mode=OneWay,Converter={StaticResource ButtonConverter}}"/>
+        <Button Grid.Row="2" Click="AppExit" Content="Cancel" HorizontalAlignment="Right" Width="{Binding ActualWidth, ElementName=grid, Mode=OneWay,Converter={StaticResource ButtonConverter}}"/>
     </Grid>
 </Window>

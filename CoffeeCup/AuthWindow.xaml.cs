@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Navigation;
 
 namespace CoffeeCup
 {
@@ -23,7 +24,9 @@ namespace CoffeeCup
         public AuthWindow()
         {
             InitializeComponent();
-            textAuthUrl.Text = app.GetGAuthLink();
+            string authlink = app.GAuthGetLink();
+            AuthUrl.NavigateUri = new Uri(authlink);
+            textAuthUrl.Text = authlink;
         }
         private void AuthOKClick(object sender, RoutedEventArgs e)
         {
@@ -35,6 +38,18 @@ namespace CoffeeCup
         }
         private void AppExit(object sender, RoutedEventArgs e) {
             System.Windows.Application.Current.Shutdown();
+        }
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e) {
+            System.Diagnostics.Process.Start(e.Uri.ToString());     
+        }
+    }
+    public class HalfConverter : IValueConverter {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+            double hw = ((double)value) / 2;
+            return hw;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+            throw new System.NotImplementedException();
         }
     }
 }

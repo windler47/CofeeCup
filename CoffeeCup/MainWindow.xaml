@@ -15,7 +15,7 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         <Label Grid.Row="0" Grid.Column="0" Content="DocumentName" VerticalAlignment="Center" />
-        <TextBox Grid.Row="0" Grid.Column="1" x:Name="DocUri"  Margin="5,5,5,5"/>
+        <TextBox Grid.Row="0" Grid.Column="1" x:Name="DocUri"  Margin="5,5,5,5" Text="Средняя чашка test"/>
         <!--<Label Grid.Row="1" Grid.Column="0" Content="WorksheetID" VerticalAlignment="Center"/>
         <TextBox Grid.Row="1" Grid.Column="1" x:Name="WSID" Margin="5,5,5,5"/>-->
         <Label Grid.Row="2" Grid.Column="0" Content="Путь к документу для выгрузки" VerticalAlignment="Center"/>

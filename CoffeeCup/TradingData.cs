@@ -55,4 +55,14 @@ namespace CoffeeCup
         public DateTime Date;
         public List<SellingPosition> SellingPositions;
     }
+    public class CellAddress {
+        public uint Row;
+        public uint Col;
+        public string IdString;
+        public CellAddress(uint row, uint col) {
+            this.Row = row;
+            this.Col = col;
+            this.IdString = string.Format("R{0}C{1}", row, col);
+        }
+    }
 }

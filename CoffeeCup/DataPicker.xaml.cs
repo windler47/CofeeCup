@@ -21,28 +21,31 @@ namespace CoffeeCup
     public partial class DataPicker : Window
     {
         CoffeeCup.App app = (CoffeeCup.App)App.Current;
-        Dictionary<int, Product> xProducts = new Dictionary<int, Product>();
-        Dictionary<int, Customer> xCustomers = new Dictionary<int, Customer>();
+        List<Customer> custList;
+        List<Product> prodList;
+        Dictionary<string, uint> Customer_row;
         public DataPicker()
         {
-
             InitializeComponent();
-            if (app.InitializedocPath())
+            if (app.InitializexmlDoc())
                 //TODO: Write workaround
                 { MessageBox.Show("Произошла ошибка при открытии файла с данными"); }
-            xProducts = AppPublicFunctions.GetGoods(app);
-            xCustomers = AppPublicFunctions.GetCustomers(app);
-            List<Customer> dCustomers = xCustomers.Values.ToList<Customer>();
-            List<Product> dProducts = xProducts.Values.ToList<Product>();
-            CustomersDataGrid.DataContext = dCustomers;
-            ProductsDataGrid.DataContext = dProducts;
+            Dictionary<int, Product> ProductsDic = app.GetGoods();
+            Dictionary<int, Customer> CustomersDic = app.GetCustomers();
+            custList = CustomersDic.Values.ToList<Customer>();
+            prodList = ProductsDic.Values.ToList<Product>();
+            app.GetRealisations(CustomersDic, ProductsDic);
+            if (app.GQeryCustomers(custList)) {
+                MessageBox.Show("Ошибка обращения к документу");
+            }
+            CustomersDataGrid.DataContext = custList;
+            ProductsDataGrid.DataContext = prodList;
         }    
         private void AppExit(object sender, RoutedEventArgs e)
         {
-            System.Windows.Application.Current.Shutdown();
+            app.GracefulShutdown();
         }
         private void OkKlick(object sender, RoutedEventArgs e) {
-            MessageBox.Show("");
         }
         #region SINGLE CLICK EDITING
         private void DataGridCell_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

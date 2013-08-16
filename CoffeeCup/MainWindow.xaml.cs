@@ -41,12 +41,18 @@ namespace CoffeeCup
         private void MainOKClick(object sender, RoutedEventArgs e)
         {
             app.DocUri = DocUri.Text;
-            //app.wsID = WSID.Text;
             app.docPath = FolderPath.Text;
-            //AuthWindow tAuthWindow = new AuthWindow();
-            //tAuthWindow.Show();
-            DataPicker tdataPicker = new DataPicker();
-            tdataPicker.Show();
+            if (app.LoadGRefreshToken()) {
+                AuthWindow tAuthWindow = new AuthWindow();
+                tAuthWindow.Show();
+            }
+            else {
+                DataPicker tdataPicker = new DataPicker();
+                tdataPicker.Show();
+            }
+            Dictionary<int, Product> prodDic = app.GetGoods();
+            Dictionary<int, Customer> custDic = app.GetCustomers();
+
             this.Close();
         }
         private void AppExit(object sender, RoutedEventArgs e)
