@@ -32,10 +32,13 @@ namespace CoffeeCup
         private void FolderBrowserButtonClick(object sender, RoutedEventArgs e)
         {
             //Open Folder Broser Dialog
-            FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
-            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) 
-            { 
-                FolderPath.Text = dialog.SelectedPath;
+            Microsoft.Win32.OpenFileDialog dialog = new Microsoft.Win32.OpenFileDialog();
+            dialog.DefaultExt = ".xml";
+            dialog.Filter = "XML Files (*.xml)|*.xml";
+            Nullable<bool> result = dialog.ShowDialog();
+            if (result == true) 
+            {
+                FolderPath.Text = dialog.FileName;
             } 
         }
         private void MainOKClick(object sender, RoutedEventArgs e)
@@ -50,9 +53,6 @@ namespace CoffeeCup
                 DataPicker tdataPicker = new DataPicker();
                 tdataPicker.Show();
             }
-            Dictionary<int, Product> prodDic = app.GetGoods();
-            Dictionary<int, Customer> custDic = app.GetCustomers();
-
             this.Close();
         }
         private void AppExit(object sender, RoutedEventArgs e)

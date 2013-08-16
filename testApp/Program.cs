@@ -8,20 +8,6 @@ using System.Xml.Linq;
 
 namespace testApp
 {
-    class Customer
-    {
-        public string Name;
-        public string City;
-        public Customer(string name)
-        {
-            Name = name;
-        }
-        public Customer(string name, string city)
-        {
-            Name = name;
-            City = city;
-        }
-    }
     class Program
     {
         static void Main(string[] args)

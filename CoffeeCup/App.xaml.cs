@@ -141,9 +141,9 @@ namespace CoffeeCup {
                     sp.Price = Convert.ToInt32((from prop in record.Elements()
                                                 where (string)prop.Attribute("Имя") == "Сумма"
                                                 select prop).Single().Element("Значение").Value);
-                    sp.NDS = Convert.ToDouble((from prop in record.Elements()
-                                               where (string)prop.Attribute("Имя") == "СуммаНДС"
-                                               select prop).Single().Element("Значение").Value);
+                    //sp.NDS = Convert.ToDouble((from prop in record.Elements()
+                    //                           where (string)prop.Attribute("Имя") == "СуммаНДС"
+                    //                           select prop).Single().Element("Значение").Value);
                     document.SellingPositions.Add(sp);
                 }
                 #endregion
@@ -184,7 +184,9 @@ namespace CoffeeCup {
             cellQuery.MaximumColumn = 3;
             CellFeed cellFeed = GSpreadsheetService.Query(cellQuery);
             Customer_Row = new Dictionary<string, uint>();
+            uint LastFilledRow = 0;
             foreach (CellEntry cell in cellFeed.Entries) {
+                #region Fill in Customer_Row dictionary
                 Customer tcust;
                 string city = null;
                 string region = null;
@@ -192,6 +194,7 @@ namespace CoffeeCup {
                 switch (cell.Column) {
                     case 1: {
                             city = cell.InputValue;
+                            LastFilledRow = cell.Row;
                             break;
                         }
                     case 2: {
@@ -205,11 +208,38 @@ namespace CoffeeCup {
                             catch (ArgumentNullException) {
                                 break;
                             }
-                            tcust.City = city;
-                            tcust.Region = region;
-                            Customer_Row.Add(tcust.Name, cell.Row);
+                            if (tcust != null) {
+                                tcust.City = city;
+                                tcust.Region = region;
+                                Customer_Row.Add(tcust.Name, cell.Row);
+                            }
                             break;
                         }
+                }
+                #endregion
+            }
+            foreach (Customer ct in cust) {
+                if (Customer_Row.ContainsKey(ct.Name)) continue;
+                LastFilledRow++;
+                cellQuery = new CellQuery(TargetWS.CellFeedLink);
+                cellQuery.MinimumRow = LastFilledRow;
+                cellQuery.MaximumRow = LastFilledRow;
+                cellQuery.MinimumColumn = 1;
+                cellQuery.MaximumColumn = 3;
+                cellFeed = GSpreadsheetService.Query(cellQuery);
+                foreach (CellEntry cell in cellFeed.Entries) {
+                    switch (cell.Column) {
+                        case 1: {
+                            cell.InputValue = ct.City;
+                            break;}
+                        case 2: {
+                            cell.InputValue = ct.Region;
+                            break;}
+                        case 3:{
+                            cell.InputValue = ct.Name;
+                            break;}
+                        }
+                    cell.Update();
                 }
             }
             return false;
@@ -309,13 +339,7 @@ namespace CoffeeCup {
                 }
             }
             return isSuccess;
-        }
-        public void SaveGRefreshToken(string refreshToken) {
-            FileStream fs = new FileStream("cc.bin", FileMode.Create);
-            BinaryWriter bw = new BinaryWriter(fs);
-            bw.Write(refreshToken);
-            fs.Close();
-        }
+        }    
         public bool LoadGRefreshToken() {
             FileStream fs;
             try {
@@ -334,6 +358,19 @@ namespace CoffeeCup {
             SaveGRefreshToken(parameters.RefreshToken);
             this.Shutdown();
         }
+       
+        public App() {
+            parameters.ClientId = CLIENT_ID;
+            parameters.ClientSecret = CLIENT_SECRET;
+            parameters.RedirectUri = REDIRECT_URI;
+            parameters.Scope = SCOPE;
+        }
+        private void SaveGRefreshToken(string refreshToken) {
+            FileStream fs = new FileStream("cc.bin", FileMode.Create);
+            BinaryWriter bw = new BinaryWriter(fs);
+            bw.Write(refreshToken);
+            fs.Close();
+        }
         private static Dictionary<String, CellEntry> GetCellEntryMap(SpreadsheetsService service, CellFeed cellFeed, List<CellAddress> cellAddrs) {
             CellFeed batchRequest = new CellFeed(new Uri(cellFeed.Self), service);
             foreach (CellAddress cellId in cellAddrs) {
@@ -350,12 +387,6 @@ namespace CoffeeCup {
                 cellEntryMap.Add(entry.BatchData.Id, entry);
             }
             return cellEntryMap;
-        }
-        public App() {
-            parameters.ClientId = CLIENT_ID;
-            parameters.ClientSecret = CLIENT_SECRET;
-            parameters.RedirectUri = REDIRECT_URI;
-            parameters.Scope = SCOPE;
         }
     }
 }

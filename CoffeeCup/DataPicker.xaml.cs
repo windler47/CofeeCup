@@ -23,7 +23,6 @@ namespace CoffeeCup
         CoffeeCup.App app = (CoffeeCup.App)App.Current;
         List<Customer> custList;
         List<Product> prodList;
-        Dictionary<string, uint> Customer_row;
         public DataPicker()
         {
             InitializeComponent();
@@ -46,6 +45,7 @@ namespace CoffeeCup
             app.GracefulShutdown();
         }
         private void OkKlick(object sender, RoutedEventArgs e) {
+
         }
         #region SINGLE CLICK EDITING
         private void DataGridCell_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

@@ -47,13 +47,16 @@ namespace CoffeeCup
         public Product Product;
         public int Amount;
         public double Price;
-        public double NDS;
+        //public double NDS;
     }
     public class Realization
     {
         public Customer Buyer;
         public DateTime Date;
         public List<SellingPosition> SellingPositions;
+        public Realization() {
+            SellingPositions = new List<SellingPosition>();
+        }
     }
     public class CellAddress {
         public uint Row;
