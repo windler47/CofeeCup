@@ -282,9 +282,33 @@ namespace CoffeeCup {
                     }
                 }
                 #endregion
-
             }
-            return false;
+            Address_Cell = GetCellEntryMap(GSpreadsheetService, cellFeed, Address_Value.Keys.ToList());
+            CellFeed batchRequest = new CellFeed(cellQuery.Uri, GSpreadsheetService);
+            foreach (CellAddress cellID in Address_Value.Keys) {
+                CellEntry batchEntry = Address_Cell[cellID.IdString];
+                if (batchEntry.InputValue=="") {
+                    batchEntry.InputValue = "=" + Address_Value[cellID];
+                }
+                else {
+                    batchEntry.InputValue += "+" + Address_Value[cellID];
+                }
+                batchEntry.BatchData = new GDataBatchEntryData(cellID.IdString, GDataBatchOperationType.update);
+                batchRequest.Entries.Add(batchEntry);
+            }
+            // Submit the update
+            CellFeed batchResponse = (CellFeed)GSpreadsheetService.Batch(batchRequest, new Uri(cellFeed.Batch));
+            // Check the results
+            bool isSuccess = true;
+            foreach (CellEntry entry in batchResponse.Entries) {
+                string batchId = entry.BatchData.Id;
+                if (entry.BatchData.Status.Code != 200) {
+                    isSuccess = false;
+                    GDataBatchStatus status = entry.BatchData.Status;
+                    MessageBox.Show(string.Format("{0} failed ({1})", batchId, status.Reason));
+                }
+            }
+            return isSuccess;
         }
         public void SaveGRefreshToken(string refreshToken) {
             FileStream fs = new FileStream("cc.bin", FileMode.Create);
