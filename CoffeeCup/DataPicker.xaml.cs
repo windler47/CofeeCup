@@ -34,7 +34,7 @@ namespace CoffeeCup
             custList = CustomersDic.Values.ToList<Customer>();
             prodList = ProductsDic.Values.ToList<Product>();
             app.GetRealisations(CustomersDic, ProductsDic);
-            if (app.GQeryCustomers(custList)) {
+            if (app.GQeryCustomers(ref custList)) {
                 MessageBox.Show("Ошибка обращения к документу");
             }
             CustomersDataGrid.DataContext = custList;
@@ -45,7 +45,9 @@ namespace CoffeeCup
             app.GracefulShutdown();
         }
         private void OkKlick(object sender, RoutedEventArgs e) {
-
+            if (app.UploadData()) {
+                MessageBox.Show("При загрузке данных произошли ошибки");
+            }
         }
         #region SINGLE CLICK EDITING
         private void DataGridCell_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

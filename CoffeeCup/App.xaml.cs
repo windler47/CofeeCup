@@ -150,7 +150,7 @@ namespace CoffeeCup {
                 realizations.Add(document);
             }
         }
-        public bool GQeryCustomers(List<Customer> cust) {
+        public bool GQeryCustomers(ref List<Customer> cust) {
             ///Return false on success
             GOAuth2RequestFactory GRequestFactory = new GOAuth2RequestFactory(null, "CoffeeCup", parameters);
             SpreadsheetsService GSpreadsheetService = new SpreadsheetsService("CoffeeCup");
@@ -185,11 +185,11 @@ namespace CoffeeCup {
             CellFeed cellFeed = GSpreadsheetService.Query(cellQuery);
             Customer_Row = new Dictionary<string, uint>();
             uint LastFilledRow = 0;
+            string city = null;
+            string region = null;
             foreach (CellEntry cell in cellFeed.Entries) {
                 #region Fill in Customer_Row dictionary
                 Customer tcust;
-                string city = null;
-                string region = null;
                 if (cell.Title.Text == "A1") continue;
                 switch (cell.Column) {
                     case 1: {
@@ -203,7 +203,7 @@ namespace CoffeeCup {
                         }
                     case 3: {
                             try {
-                                tcust = cust.Find((e) => e.Name == cell.InputValue);
+                                tcust = cust.Find((e) => { return e.Name == cell.InputValue; });
                             }
                             catch (ArgumentNullException) {
                                 break;
@@ -329,11 +329,11 @@ namespace CoffeeCup {
             // Submit the update
             CellFeed batchResponse = (CellFeed)GSpreadsheetService.Batch(batchRequest, new Uri(cellFeed.Batch));
             // Check the results
-            bool isSuccess = true;
+            bool isSuccess = false;
             foreach (CellEntry entry in batchResponse.Entries) {
                 string batchId = entry.BatchData.Id;
                 if (entry.BatchData.Status.Code != 200) {
-                    isSuccess = false;
+                    isSuccess = true;
                     GDataBatchStatus status = entry.BatchData.Status;
                     MessageBox.Show(string.Format("{0} failed ({1})", batchId, status.Reason));
                 }
