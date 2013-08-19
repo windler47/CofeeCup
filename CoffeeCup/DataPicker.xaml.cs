@@ -48,6 +48,10 @@ namespace CoffeeCup
             if (app.UploadData()) {
                 MessageBox.Show("При загрузке данных произошли ошибки");
             }
+            else {
+                MessageBox.Show("Это успех!");
+                app.GracefulShutdown();
+            }
         }
         #region SINGLE CLICK EDITING
         private void DataGridCell_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

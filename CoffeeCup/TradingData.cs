@@ -68,4 +68,27 @@ namespace CoffeeCup
             this.IdString = string.Format("R{0}C{1}", row, col);
         }
     }
+    class CellSameAddress : EqualityComparer<CellAddress>
+{
+
+        public override bool Equals(CellAddress c1, CellAddress c2)
+	{
+		if (c1.Col == c2.Col && c1.Row == c2.Row)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+
+        public override int GetHashCode(CellAddress c)
+	{
+        int hCode = Convert.ToInt32(c.Col.ToString() + c.Row.ToString());
+		return hCode.GetHashCode();
+	}
+
+}
 }

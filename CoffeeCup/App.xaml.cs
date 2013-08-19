@@ -120,6 +120,10 @@ namespace CoffeeCup {
                     MessageBox.Show("Error while parsing xml date");
                     continue;
                 }
+                int buyerCode = (int)(from prop in ProductRealisation.Elements("Свойство")
+                                  where (string)prop.Attribute("Имя") == "Контрагент"
+                                  select prop).Single().Element("Ссылка").Attribute("Нпп");
+                document.Buyer = Customers[buyerCode];
                 IEnumerable<XElement> Records = (from elements in ProductRealisation.Elements("ТабличнаяЧасть")
                                                  where (string)elements.Attribute("Имя") == "Товары"
                                                  select elements).Single().Elements();
@@ -250,13 +254,13 @@ namespace CoffeeCup {
             GSpreadsheetService.RequestFactory = GRequestFactory;
             CellQuery cellQuery = new CellQuery(TargetWS.CellFeedLink);
             CellFeed cellFeed = GSpreadsheetService.Query(cellQuery);
-
-            Dictionary<CellAddress, string> Address_Value = new Dictionary<CellAddress, string>();
+            CellSameAddress CellEqC = new CellSameAddress();
+            Dictionary<CellAddress, string> Address_Value = new Dictionary<CellAddress, string>(CellEqC);
             Dictionary<string, CellEntry> Address_Cell;
             foreach (Realization doc in realizations) {
                 if (!doc.Buyer.IsUploaded) continue;
 
-                uint docColOffset = 3 + 6 * ((uint)doc.Date.Month + 12 * ((uint)doc.Date.Year - 2013));
+                uint docColOffset = 3 + 6 * (((uint)doc.Date.Month + 12 * ((uint)doc.Date.Year - 2013))-1);
                 uint docRow = Customer_Row[doc.Buyer.Name];
                 #region Filling Address_Value dictionary
                 foreach (SellingPosition rec in doc.SellingPositions) {
@@ -273,7 +277,8 @@ namespace CoffeeCup {
                         if (Address_Value.ContainsKey(cupNumAddress)) {
                             leadingstr = "+";
                             Address_Value[cupNumAddress] += (leadingstr + cupNumstr);
-                            Address_Value[cupSumAddress] += (leadingstr + cupSumstr);
+                            if (Address_Value.ContainsKey(cupSumAddress)) Address_Value[cupSumAddress] += (leadingstr + cupSumstr);
+                            else Address_Value[cupSumAddress] = (leadingstr + cupSumstr);
                         }
                         else {
                             leadingstr = string.Empty;
