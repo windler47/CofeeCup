@@ -154,8 +154,8 @@ namespace CoffeeCup {
                 realizations.Add(document);
             }
         }
-        public bool GQeryCustomers(ref List<Customer> cust) {
-            ///Return false on success
+        public List<Customer>  GetCustomerData(ref List<Customer> customerList) {
+            List<Customer> newCustomers = new List<Customer>();
             GOAuth2RequestFactory GRequestFactory = new GOAuth2RequestFactory(null, "CoffeeCup", parameters);
             SpreadsheetsService GSpreadsheetService = new SpreadsheetsService("CoffeeCup");
             GSpreadsheetService.RequestFactory = GRequestFactory;
@@ -165,7 +165,7 @@ namespace CoffeeCup {
             SpreadsheetFeed feed = GSpreadsheetService.Query(query);
             if (feed.Entries.Count == 0) {
                 MessageBox.Show("No documents found :(");
-                return true;
+                return null;
             }
             SpreadsheetEntry spreadsheet = null;
             foreach (AtomEntry spr in feed.Entries) {
@@ -176,7 +176,7 @@ namespace CoffeeCup {
             }
             if (spreadsheet == null) {
                 MessageBox.Show("No documents found :(");
-                return true;
+                return null;
             }
             // Get the first worksheet of the spreadsheet.
             // TODO: Choose a worksheet more intelligently.
@@ -187,8 +187,6 @@ namespace CoffeeCup {
             cellQuery.MinimumColumn = 1;
             cellQuery.MaximumColumn = 3;
             CellFeed cellFeed = GSpreadsheetService.Query(cellQuery);
-            Customer_Row = new Dictionary<string, uint>();
-            uint LastFilledRow = 0;
             string city = null;
             string region = null;
             foreach (CellEntry cell in cellFeed.Entries) {
@@ -198,7 +196,6 @@ namespace CoffeeCup {
                 switch (cell.Column) {
                     case 1: {
                             city = cell.InputValue;
-                            LastFilledRow = cell.Row;
                             break;
                         }
                     case 2: {
@@ -206,12 +203,10 @@ namespace CoffeeCup {
                             break;
                         }
                     case 3: {
-                            try {
-                                tcust = cust.Find((e) => { return e.Name == cell.InputValue; });
-                            }
-                            catch (ArgumentNullException) {
-                                break;
-                            }
+                            try {tcust = customerList.Find((e) => { return e.Name == cell.InputValue; });}                            
+                            catch (ArgumentNullException) {break;}
+                            try { tcust = customerList.Find((e) => { return e.altName == cell.InputValue; }); }
+                            catch (ArgumentNullException) { break; }
                             if (tcust != null) {
                                 tcust.City = city;
                                 tcust.Region = region;
@@ -222,7 +217,7 @@ namespace CoffeeCup {
                 }
                 #endregion
             }
-            foreach (Customer ct in cust) {
+            foreach (Customer ct in customerList) {
                 if (Customer_Row.ContainsKey(ct.Name)) continue;
                 LastFilledRow++;
                 cellQuery = new CellQuery(TargetWS.CellFeedLink);
@@ -362,8 +357,7 @@ namespace CoffeeCup {
         public void GracefulShutdown() {
             SaveGRefreshToken(parameters.RefreshToken);
             this.Shutdown();
-        }
-       
+        }    
         public App() {
             parameters.ClientId = CLIENT_ID;
             parameters.ClientSecret = CLIENT_SECRET;

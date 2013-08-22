@@ -14,6 +14,7 @@ namespace CoffeeCup
         public string City { get; set; }
         public string Region { get; set; }
         public string Name { get; private set; }
+        public string altName { get; set; }
         public bool IsUploaded { get; set; }
         public Customer(string name)
         {
