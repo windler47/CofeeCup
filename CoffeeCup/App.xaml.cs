@@ -155,7 +155,7 @@ namespace CoffeeCup {
             }
         }
         public List<Customer>  GetCustomerData(ref List<Customer> customerList) {
-            List<Customer> newCustomers = new List<Customer>();
+            List<Customer> newCustomers = customerList;
             GOAuth2RequestFactory GRequestFactory = new GOAuth2RequestFactory(null, "CoffeeCup", parameters);
             SpreadsheetsService GSpreadsheetService = new SpreadsheetsService("CoffeeCup");
             GSpreadsheetService.RequestFactory = GRequestFactory;
@@ -191,7 +191,6 @@ namespace CoffeeCup {
             string region = null;
             foreach (CellEntry cell in cellFeed.Entries) {
                 #region Fill in Customer_Row dictionary
-                Customer tcust;
                 if (cell.Title.Text == "A1") continue;
                 switch (cell.Column) {
                     case 1: {
@@ -203,45 +202,24 @@ namespace CoffeeCup {
                             break;
                         }
                     case 3: {
-                            try {tcust = customerList.Find((e) => { return e.Name == cell.InputValue; });}                            
-                            catch (ArgumentNullException) {break;}
-                            try { tcust = customerList.Find((e) => { return e.altName == cell.InputValue; }); }
-                            catch (ArgumentNullException) { break; }
-                            if (tcust != null) {
-                                tcust.City = city;
-                                tcust.Region = region;
-                                Customer_Row.Add(tcust.Name, cell.Row);
-                            }
-                            break;
+                        Customer tcust = null;
+                        try {tcust = customerList.Find((e) => { return e.Name == cell.InputValue; });}                            
+                        catch (ArgumentNullException) {}
+                        try { tcust = customerList.Find((e) => { return e.altName == cell.InputValue; }); }
+                        catch (ArgumentNullException) {}
+                        if (tcust != null) {
+                            tcust.City = city;
+                            tcust.Region = region;
+                            tcust.altName = cell.InputValue;
+                            Customer_Row.Add(tcust.Name, cell.Row);
+                            newCustomers.RemoveAll((e) => { return (e.Name == cell.InputValue || e.altName == cell.InputValue); });
                         }
+                        break;
+                    }
                 }
                 #endregion
             }
-            foreach (Customer ct in customerList) {
-                if (Customer_Row.ContainsKey(ct.Name)) continue;
-                LastFilledRow++;
-                cellQuery = new CellQuery(TargetWS.CellFeedLink);
-                cellQuery.MinimumRow = LastFilledRow;
-                cellQuery.MaximumRow = LastFilledRow;
-                cellQuery.MinimumColumn = 1;
-                cellQuery.MaximumColumn = 3;
-                cellFeed = GSpreadsheetService.Query(cellQuery);
-                foreach (CellEntry cell in cellFeed.Entries) {
-                    switch (cell.Column) {
-                        case 1: {
-                            cell.InputValue = ct.City;
-                            break;}
-                        case 2: {
-                            cell.InputValue = ct.Region;
-                            break;}
-                        case 3:{
-                            cell.InputValue = ct.Name;
-                            break;}
-                        }
-                    cell.Update();
-                }
-            }
-            return false;
+            return newCustomers;
         }
         public bool UploadData() {
             GOAuth2RequestFactory GRequestFactory = new GOAuth2RequestFactory(null, "CoffeeCup", parameters);
