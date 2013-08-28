@@ -34,7 +34,8 @@ namespace CoffeeCup
             custList = CustomersDic.Values.ToList<Customer>();
             prodList = ProductsDic.Values.ToList<Product>();
             app.GetRealisations(CustomersDic, ProductsDic);
-            if (app.GQeryCustomers(ref custList)) {
+            List<Customer> newCustomers = app.GetCustomerData(ref custList);
+            if (newCustomers == null) {
                 MessageBox.Show("Ошибка обращения к документу");
             }
             CustomersDataGrid.DataContext = custList;

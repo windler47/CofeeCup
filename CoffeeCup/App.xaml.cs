@@ -23,6 +23,7 @@ namespace CoffeeCup {
         const string REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
         const string SCOPE = "https://spreadsheets.google.com/feeds https://docs.google.com/feeds/";
         public OAuth2Parameters parameters = new OAuth2Parameters();
+        SpreadsheetsService GSpreadsheetService = new SpreadsheetsService("CoffeeCup");
         #endregion
         public string DocUri; //Document key
         public string docPath; //Document Path
@@ -157,7 +158,6 @@ namespace CoffeeCup {
         public List<Customer>  GetCustomerData(ref List<Customer> customerList) {
             List<Customer> newCustomers = customerList;
             GOAuth2RequestFactory GRequestFactory = new GOAuth2RequestFactory(null, "CoffeeCup", parameters);
-            SpreadsheetsService GSpreadsheetService = new SpreadsheetsService("CoffeeCup");
             GSpreadsheetService.RequestFactory = GRequestFactory;
             // Instantiate a SpreadsheetQuery object to retrieve spreadsheets.
             SpreadsheetQuery query = new SpreadsheetQuery();
@@ -234,7 +234,12 @@ namespace CoffeeCup {
                 if (!doc.Buyer.IsUploaded) continue;
 
                 uint docColOffset = 3 + 6 * (((uint)doc.Date.Month + 12 * ((uint)doc.Date.Year - 2013))-1);
-                uint docRow = Customer_Row[doc.Buyer.Name];
+                try {
+                    uint docRow = Customer_Row[doc.Buyer.Name];
+                }
+                catch (KeyNotFoundException) {
+
+                }
                 #region Filling Address_Value dictionary
                 foreach (SellingPosition rec in doc.SellingPositions) {
                     if (!rec.Product.IsUploaded) continue;
@@ -365,6 +370,24 @@ namespace CoffeeCup {
             }
             return cellEntryMap;
         }
+        public void AddNewCustomerRow(Customer newCustomer) {
+            // Define the URL to request the list feed of the worksheet.
+            AtomLink listFeedLink = TargetWS.Links.FindService(GDataSpreadsheetsNameTable.ListRel, null);
+            // Fetch the list feed of the worksheet.
+            ListQuery listQuery = new ListQuery(listFeedLink.HRef.ToString());
+            ListFeed listFeed = GSpreadsheetService.Query(listQuery);
+            // Create a local representation of the new row.
+            ListEntry row = new ListEntry();
+            row.Elements.Add(new ListEntry.Custom() { LocalName = "city", Value = newCustomer.City });
+            row.Elements.Add(new ListEntry.Custom() { LocalName = "region", Value = newCustomer.Region });
+            if (newCustomer.altName == null || newCustomer.altName == "") {
+                row.Elements.Add(new ListEntry.Custom() { LocalName = "name", Value = newCustomer.Name });
+            }
+            else {
+                row.Elements.Add(new ListEntry.Custom() { LocalName = "name", Value = newCustomer.altName });
+            }
+            // Send the new row to the API for insertion.
+            GSpreadsheetService.Insert(listFeed, row);
+        }    
     }
 }
-

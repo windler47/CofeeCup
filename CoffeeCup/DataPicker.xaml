@@ -27,7 +27,8 @@
                 <TabItem.Content>
                     <DataGrid x:Name="CustomersDataGrid" ItemsSource="{Binding}" AutoGenerateColumns="False" CanUserAddRows="False">
                         <DataGrid.Columns>
-                            <DataGridTextColumn  Header="Название" Binding="{Binding Name}" IsReadOnly="True"/>
+                            <DataGridTextColumn  Header="Название 1С" Binding="{Binding Name}" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Назвние Google" Binding="{Binding altName}"/>
                             <DataGridTextColumn Header="Город" Binding="{Binding City}"/>
                             <DataGridTextColumn Header="Область" Binding="{Binding Region}"/>
                             <DataGridCheckBoxColumn Header="Выгружаемый" Binding="{Binding IsUploaded, Mode=TwoWay}"/>
