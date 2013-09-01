@@ -29,7 +29,7 @@ namespace CoffeeCup {
         public string docPath; //Document Path
         public XElement xmlDoc;
         List<Realization> realizations;
-        Dictionary<string, uint> Customer_Row;
+        public Dictionary<string, uint> Customer_Row = new Dictionary<string, uint>();
         WorksheetEntry TargetWS;
         public string GAuthGetLink() {
             return OAuthUtil.CreateOAuth2AuthorizationUrl(parameters);
@@ -155,8 +155,7 @@ namespace CoffeeCup {
                 realizations.Add(document);
             }
         }
-        public List<Customer>  GetCustomerData(ref List<Customer> customerList) {
-            List<Customer> newCustomers = customerList;
+        public bool  GetCustomerData(ref List<Customer> customerList) {
             GOAuth2RequestFactory GRequestFactory = new GOAuth2RequestFactory(null, "CoffeeCup", parameters);
             GSpreadsheetService.RequestFactory = GRequestFactory;
             // Instantiate a SpreadsheetQuery object to retrieve spreadsheets.
@@ -165,7 +164,7 @@ namespace CoffeeCup {
             SpreadsheetFeed feed = GSpreadsheetService.Query(query);
             if (feed.Entries.Count == 0) {
                 MessageBox.Show("No documents found :(");
-                return null;
+                return true;
             }
             SpreadsheetEntry spreadsheet = null;
             foreach (AtomEntry spr in feed.Entries) {
@@ -176,7 +175,7 @@ namespace CoffeeCup {
             }
             if (spreadsheet == null) {
                 MessageBox.Show("No documents found :(");
-                return null;
+                return true;
             }
             // Get the first worksheet of the spreadsheet.
             // TODO: Choose a worksheet more intelligently.
@@ -211,15 +210,14 @@ namespace CoffeeCup {
                             tcust.City = city;
                             tcust.Region = region;
                             tcust.altName = cell.InputValue;
-                            Customer_Row.Add(tcust.Name, cell.Row);
-                            newCustomers.RemoveAll((e) => { return (e.Name == cell.InputValue || e.altName == cell.InputValue); });
                         }
+                        Customer_Row.Add(cell.InputValue, cell.Row);
                         break;
                     }
                 }
                 #endregion
             }
-            return newCustomers;
+            return false;
         }
         public bool UploadData() {
             GOAuth2RequestFactory GRequestFactory = new GOAuth2RequestFactory(null, "CoffeeCup", parameters);
@@ -231,14 +229,18 @@ namespace CoffeeCup {
             Dictionary<CellAddress, string> Address_Value = new Dictionary<CellAddress, string>(CellEqC);
             Dictionary<string, CellEntry> Address_Cell;
             foreach (Realization doc in realizations) {
-                if (!doc.Buyer.IsUploaded) continue;
+                bool contains_cofee = false;
+                foreach (SellingPosition rec in doc.SellingPositions){
+                    if (rec.Product.IsUploaded) contains_cofee = true;
+                }
+                if (!doc.Buyer.IsUploaded || !contains_cofee) continue;
 
                 uint docColOffset = 3 + 6 * (((uint)doc.Date.Month + 12 * ((uint)doc.Date.Year - 2013))-1);
-                try {
-                    uint docRow = Customer_Row[doc.Buyer.Name];
-                }
-                catch (KeyNotFoundException) {
-
+                uint docRow = 0;
+                if (Customer_Row.ContainsKey(doc.Buyer.altName)) docRow = Customer_Row[doc.Buyer.altName];
+                else if (Customer_Row.ContainsKey(doc.Buyer.Name)) docRow = Customer_Row[doc.Buyer.Name];
+                else {
+                    docRow = (uint)AddNewCustomerRow(doc.Buyer);
                 }
                 #region Filling Address_Value dictionary
                 foreach (SellingPosition rec in doc.SellingPositions) {
@@ -353,6 +355,59 @@ namespace CoffeeCup {
             bw.Write(refreshToken);
             fs.Close();
         }
+        public void SaveProductData(List<Product> prodList) {
+            string filename = "LocalBase.xml";
+            XDocument doc = new XDocument();
+            XElement products = new XElement("Products");
+            doc.Add(products);
+            foreach (Product prod in prodList) {
+                XElement p = new XElement("Product");
+                p.Add(new XAttribute("Name", prod.Name));
+                p.Add(new XAttribute("IsUploaded", prod.IsUploaded));
+                p.Add(new XAttribute("Mmult", prod.MachMult));
+                p.Add(new XAttribute("Cmult", prod.CupsuleMult));
+                products.Add(p);
+            }
+            doc.Save(filename);
+        }
+        public bool LoadProductData(ref List<Product> prodList) {
+            string filename = "LocalBase.xml";
+            FileStream fstream = null;
+            try {
+                fstream = new FileStream(filename, FileMode.Open);
+            }
+            catch (FileNotFoundException) {
+                MessageBox.Show("Error: Local database file not found!");
+                return true;
+            }
+            if (fstream.CanRead == false) {
+                MessageBox.Show("Database file " + filename +" cannot be read!");
+                return true;
+            }
+            XDocument doc = XDocument.Load(fstream);
+            XElement prodDB = doc.Element("Products");
+            if (prodDB == null) {
+                MessageBox.Show("There are no Product data in local database!");
+                return false;
+            }
+            if (prodDB.IsEmpty) {
+                MessageBox.Show("There are no Product data in local database!");
+                return false;
+            }
+            foreach (Product prod in prodList) {
+                try {
+                    XElement p = (from prodRec in prodDB.Element("Products").Elements()
+                                  where (string)prodRec.Attribute("Name") == prod.Name
+                                  select prodRec).Single();
+                    prod.IsUploaded = bool.Parse(p.Attribute("IsUploaded").Value);
+                    prod.CupsuleMult = Convert.ToInt32(p.Attribute("Cmult").Value);
+                    prod.MachMult = Convert.ToInt32(p.Attribute("Mmult").Value);
+                }
+                catch {}
+            }
+            return false;
+            
+        }
         private static Dictionary<String, CellEntry> GetCellEntryMap(SpreadsheetsService service, CellFeed cellFeed, List<CellAddress> cellAddrs) {
             CellFeed batchRequest = new CellFeed(new Uri(cellFeed.Self), service);
             foreach (CellAddress cellId in cellAddrs) {
@@ -370,24 +425,62 @@ namespace CoffeeCup {
             }
             return cellEntryMap;
         }
-        public void AddNewCustomerRow(Customer newCustomer) {
+        public int AddNewCustomerRow(List<Customer> newCustomers) {
             // Define the URL to request the list feed of the worksheet.
             AtomLink listFeedLink = TargetWS.Links.FindService(GDataSpreadsheetsNameTable.ListRel, null);
             // Fetch the list feed of the worksheet.
             ListQuery listQuery = new ListQuery(listFeedLink.HRef.ToString());
             ListFeed listFeed = GSpreadsheetService.Query(listQuery);
-            // Create a local representation of the new row.
+            ListEntry example = (ListEntry)listFeed.Entries[3];
+            ListEntry total = (ListEntry)listFeed.Entries.Last();
+            string cityColCode = example.Elements[0].LocalName;
+            string regionColCode = example.Elements[1].LocalName;
+            string nameColCode = example.Elements[2].LocalName;
+            int linenumber = listFeed.TotalResults;
+            total.Delete();
+            foreach (Customer customer in newCustomers) {
+                // Create a local representation of the new row.
+                ListEntry row = new ListEntry();
+                row.Elements.Add(new ListEntry.Custom() { LocalName=cityColCode, Value = customer.City });
+                row.Elements.Add(new ListEntry.Custom() { LocalName=regionColCode, Value = customer.Region });
+                if (string.IsNullOrWhiteSpace(customer.altName)) {
+                    row.Elements.Add(new ListEntry.Custom() { LocalName=nameColCode, Value = customer.Name });
+                }
+                else {
+                    row.Elements.Add(new ListEntry.Custom() { LocalName = nameColCode, Value = customer.altName });
+                }
+                // Send the new row to the API for insertion.
+                GSpreadsheetService.Insert(listFeed, row);
+            }
+            GSpreadsheetService.Insert(listFeed, total);
+            return linenumber + 1;
+        }
+        public int AddNewCustomerRow(Customer newCustomer) {
+            // Define the URL to request the list feed of the worksheet.
+            AtomLink listFeedLink = TargetWS.Links.FindService(GDataSpreadsheetsNameTable.ListRel, null);
+            // Fetch the list feed of the worksheet.
+            ListQuery listQuery = new ListQuery(listFeedLink.HRef.ToString());
+            ListFeed listFeed = GSpreadsheetService.Query(listQuery);
+            ListEntry example = (ListEntry)listFeed.Entries[3];
+            ListEntry total = (ListEntry)listFeed.Entries.Last();
+            string cityColCode = example.Elements[0].LocalName;
+            string regionColCode = example.Elements[1].LocalName;
+            string nameColCode = example.Elements[2].LocalName;
+            int linenumber = listFeed.TotalResults;
+            total.Delete();
             ListEntry row = new ListEntry();
-            row.Elements.Add(new ListEntry.Custom() { LocalName = "city", Value = newCustomer.City });
-            row.Elements.Add(new ListEntry.Custom() { LocalName = "region", Value = newCustomer.Region });
-            if (newCustomer.altName == null || newCustomer.altName == "") {
-                row.Elements.Add(new ListEntry.Custom() { LocalName = "name", Value = newCustomer.Name });
+            row.Elements.Add(new ListEntry.Custom() { LocalName = cityColCode, Value = newCustomer.City });
+            row.Elements.Add(new ListEntry.Custom() { LocalName = regionColCode, Value = newCustomer.Region });
+            if (string.IsNullOrWhiteSpace(newCustomer.altName)) {
+                row.Elements.Add(new ListEntry.Custom() { LocalName = nameColCode, Value = newCustomer.Name });
             }
             else {
-                row.Elements.Add(new ListEntry.Custom() { LocalName = "name", Value = newCustomer.altName });
+                row.Elements.Add(new ListEntry.Custom() { LocalName = nameColCode, Value = newCustomer.altName });
             }
             // Send the new row to the API for insertion.
             GSpreadsheetService.Insert(listFeed, row);
-        }    
+            GSpreadsheetService.Insert(listFeed, total);
+            return linenumber + 1;
+        }
     }
 }

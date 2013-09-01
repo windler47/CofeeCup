@@ -34,8 +34,7 @@ namespace CoffeeCup
             custList = CustomersDic.Values.ToList<Customer>();
             prodList = ProductsDic.Values.ToList<Product>();
             app.GetRealisations(CustomersDic, ProductsDic);
-            List<Customer> newCustomers = app.GetCustomerData(ref custList);
-            if (newCustomers == null) {
+            if (app.GetCustomerData(ref custList)) {
                 MessageBox.Show("Ошибка обращения к документу");
             }
             CustomersDataGrid.DataContext = custList;
@@ -46,13 +45,7 @@ namespace CoffeeCup
             app.GracefulShutdown();
         }
         private void OkKlick(object sender, RoutedEventArgs e) {
-            if (app.UploadData()) {
-                MessageBox.Show("При загрузке данных произошли ошибки");
-            }
-            else {
-                MessageBox.Show("Это успех!");
-                app.GracefulShutdown();
-            }
+            app.UploadData();
         }
         #region SINGLE CLICK EDITING
         private void DataGridCell_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -99,5 +92,12 @@ namespace CoffeeCup
             return null;
         }
         #endregion
+
+        private void SavePData(object sender, RoutedEventArgs e) {
+            app.SaveProductData(prodList);
+        }
+        private void LoadPData(object sender, RoutedEventArgs e) {
+            app.LoadProductData(ref prodList);
+        }
     }
 }
