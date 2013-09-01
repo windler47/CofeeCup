@@ -99,5 +99,11 @@ namespace CoffeeCup
         private void LoadPData(object sender, RoutedEventArgs e) {
             app.LoadProductData(ref prodList);
         }
+        private void SaveCData(object sender, RoutedEventArgs e) {
+            app.SaveCustomerData(custList);
+        }
+        private void LoadCData(object sender, RoutedEventArgs e) {
+            app.LoadCustomerData(ref custList);
+        }
     }
 }
