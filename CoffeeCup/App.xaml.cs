@@ -357,18 +357,30 @@ namespace CoffeeCup {
         }
         public void SaveProductData(List<Product> prodList) {
             string filename = "LocalBase.xml";
-            XDocument doc = new XDocument();
-            XElement products = new XElement("Products");
-            doc.Add(products);
+            FileStream fstream = null;
+            XDocument db = null;
+            bool isDBExist = true;
+            try{fstream = new FileStream(filename, FileMode.Open);}
+            catch {
+                isDBExist = false;
+                fstream = new FileStream(filename, FileMode.CreateNew);
+            }
+            if (isDBExist){ db = XDocument.Load(fstream);}
+            else { db = new XDocument();}
+            XElement prodDB = db.Element("Products");
+            if (prodDB == null) {
+                db.Add(new XElement("Products"));
+                prodDB = db.Element("Products");
+            }
             foreach (Product prod in prodList) {
                 XElement p = new XElement("Product");
                 p.Add(new XAttribute("Name", prod.Name));
                 p.Add(new XAttribute("IsUploaded", prod.IsUploaded));
                 p.Add(new XAttribute("Mmult", prod.MachMult));
                 p.Add(new XAttribute("Cmult", prod.CupsuleMult));
-                products.Add(p);
+                prodDB.Add(p);
             }
-            doc.Save(filename);
+            db.Save(fstream);
         }
         public bool LoadProductData(ref List<Product> prodList) {
             string filename = "LocalBase.xml";
