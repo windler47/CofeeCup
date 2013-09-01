@@ -19,11 +19,15 @@ namespace CoffeeCup
         public Customer(string name)
         {
             Name = name;
+            altName = string.Empty;
+            City = string.Empty;
+            Region = string.Empty;
             IsUploaded = true;
         }
         public Customer(string name, string city, string region )
         {
             Name = name;
+            altName = string.Empty;
             City = city;
             Region = region;
             IsUploaded = true;

@@ -11,6 +11,7 @@ using System.Xml.Linq;
 using Google.GData.Client;
 using Google.GData.Spreadsheets;
 using System.Security;
+using System.Globalization;
 
 namespace CoffeeCup {
     /// <summary>
@@ -96,12 +97,30 @@ namespace CoffeeCup {
             return result;
         }
         public void GetRealisations(Dictionary<int, Customer> Customers, Dictionary<int, Product> Products) {
+            int? warehouseCode = null;
+            XElement company = xmlDoc.Elements("Объект").Where((e) => { return (string)e.Attribute("ИмяПравила") == "Организации"; }).Single();
+            if (company.Element("Свойство").Element("Значение").Value == "\"Торговый дом РИКО\"") {
+                XElement warehouse = xmlDoc.Elements("Объект").Where((e) =>
+                {
+                    if ((string)e.Attribute("ИмяПравила") != "Склады") return false;
+                    return e.Element("Свойство").Element("Значение").Value == "Основной склад";
+                }).Single();
+                warehouseCode = Convert.ToInt32(warehouse.Element("Ссылка").Attribute("Нпп").Value);
+            }
             realizations = new List<Realization>();
             IEnumerable<XElement> obj =
                 from fobject in xmlDoc.Elements("Объект")
                 where (string)fobject.Attribute("ИмяПравила") == "РеализацияТоваровУслуг"
                 select fobject;
             foreach (XElement ProductRealisation in obj) {
+                if (warehouseCode != null) {
+                    if ( Convert.ToInt32(ProductRealisation.Elements("Свойство").Where(
+                        (e) => { return (string)e.Attribute("Имя") == "Склад"; }
+                        ).Single().Element("Ссылка").Attribute("Нпп").Value) != warehouseCode ) 
+                    {
+                            continue;
+                    }
+                }
                 bool IsDelited = (from prop in ProductRealisation.Elements("Свойство")
                                   where (string)prop.Attribute("Имя") == "ПометкаУдаления" && (string)prop.Element("Значение") == "true"
                                   select prop).Any();
@@ -143,12 +162,9 @@ namespace CoffeeCup {
                     catch (KeyNotFoundException) {
                         MessageBox.Show("Error in xml: Sellin product was not found in dictionary");
                     }
-                    sp.Price = Convert.ToInt32((from prop in record.Elements()
+                    sp.Price = Convert.ToDouble((from prop in record.Elements()
                                                 where (string)prop.Attribute("Имя") == "Сумма"
-                                                select prop).Single().Element("Значение").Value);
-                    //sp.NDS = Convert.ToDouble((from prop in record.Elements()
-                    //                           where (string)prop.Attribute("Имя") == "СуммаНДС"
-                    //                           select prop).Single().Element("Значение").Value);
+                                                select prop).Single().Element("Значение").Value, new CultureInfo("en-US"));
                     document.SellingPositions.Add(sp);
                 }
                 #endregion

@@ -5,61 +5,41 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+using System.IO;
+using System.Globalization;
 
-namespace testApp
-{
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            string testxml = "020813РБУ.xml";
-            XElement xmlDoc = XElement.Load(testxml);
-            Dictionary<int, string> goods = GetGoods(xmlDoc);
-            Dictionary<int, Customer> customers = GetCustomers(xmlDoc);
-        }
-        public static Dictionary<int, string> GetGoods(XElement xmlDoc)
-        {
-            Dictionary<int,string> result = new Dictionary<int,string>();
-            IEnumerable<XElement> goods =
-                from fobject in xmlDoc.Elements("Объект")
-                where (string)fobject.Attribute("ИмяПравила") == "Номенклатура"
-                select fobject;
-
-            foreach (XElement el in goods)
-            {
-                #region Qery data from Xml
-                bool isGroup = (from el1 in el.Element("Ссылка").Elements("Свойство")
-                                where (string)el1.Attribute("Имя") == "ЭтоГруппа" && (string)el1.Element("Значение") == "true"
-                                select el1).Any();
-                if (isGroup) continue;
-                string productName = (string)(from el1 in el.Elements("Свойство")
-                                              where (string)el1.Attribute("Имя") == "Наименование"
-                                              select el1).ElementAt(0);
-                #endregion
-                //Console.WriteLine("{0} Товар: {1}", el.Element("Ссылка").Attribute("Нпп"), productName);
-                result.Add((int)el.Element("Ссылка").Attribute("Нпп"),productName);
-            }         
-            return result;
-        }
-        public static Dictionary<int, Customer> GetCustomers(XElement xmlDoc)
-        {
-            Dictionary<int, Customer> result = new Dictionary<int, Customer>();
-            IEnumerable<XElement> obj =
-                from fobject in xmlDoc.Elements("Объект")
-                where (string)fobject.Attribute("ИмяПравила") == "Контрагенты"
-                select fobject;
-            foreach (XElement el in obj)
-            {
-                bool isGroup = (from el1 in el.Element("Ссылка").Elements("Свойство")
-                                where (string)el1.Attribute("Имя") == "ЭтоГруппа" && (string)el1.Element("Значение") == "true"
-                                select el1).Any();
-                if (isGroup) continue;
-                Customer customer = new Customer((string)(from el1 in el.Elements("Свойство")
-                                              where (string)el1.Attribute("Имя") == "Наименование"
-                                              select el1).ElementAt(0));
-                result.Add((int)el.Element("Ссылка").Attribute("Нпп"),customer);
+namespace testApp {
+    class Program {
+        static void Main(string[] args) {
+            CultureInfo t = new CultureInfo("en-US");
+            double d = Convert.ToDouble("1234.5",t);
+            Console.Write(d);
+            string directory = AppDomain.CurrentDomain.BaseDirectory;
+            Console.WriteLine(directory);
+            DirectoryInfo dir = new DirectoryInfo(directory); 
+            foreach (FileInfo files in dir.GetFiles("*.xml")) {
+                if (files.Name.Substring(0, 4) == "test") continue;
+                Console.WriteLine(files.Name);
+                Console.WriteLine("=============");
+                XElement xmlDoc = XElement.Load(files.Name);
+                IEnumerable<XElement> org = from fobject in xmlDoc.Elements("Объект")
+                                            where (string)fobject.Attribute("ИмяПравила") == "Организации"
+                                            select fobject;
+                Console.WriteLine("Организации:");
+                foreach (XElement organization in org) {
+                    Console.WriteLine(organization.Element("Свойство").Element("Значение").Value);
+                }
+                Console.WriteLine("Склады:");
+                IEnumerable<XElement> war = from fobject in xmlDoc.Elements("Объект")
+                                            where (string)fobject.Attribute("ИмяПравила") == "Склады"
+                                            select fobject;
+                foreach (XElement wrah in war) {
+                    XElement prop = wrah.Element("Свойство");
+                    Console.WriteLine(prop.Element("Значение").Value);
+                }
+                Console.WriteLine("=============");
             }
-            return result;
+            Console.Read();
         }
     }
 }
