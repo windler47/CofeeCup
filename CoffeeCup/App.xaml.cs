@@ -420,6 +420,74 @@ namespace CoffeeCup {
             return false;
             
         }
+
+        public void SaveCustomerData(List<Customer> custList) {
+            string filename = "LocalBase.xml";
+            FileStream fstream = null;
+            XDocument db = null;
+            bool isDBExist = true;
+            try { fstream = new FileStream(filename, FileMode.Open); }
+            catch {
+                isDBExist = false;
+                fstream = new FileStream(filename, FileMode.CreateNew);
+            }
+            if (isDBExist) { db = XDocument.Load(fstream); }
+            else { db = new XDocument(); }
+            XElement prodDB = db.Element("Customers");
+            if (prodDB == null) {
+                db.Add(new XElement("Customers"));
+                prodDB = db.Element("Customers");
+            }
+            foreach (Customer cust in custList) {
+                XElement c = new XElement("Customer");
+                c.Add(new XAttribute("Name", cust.Name));
+                c.Add(new XAttribute("AltName", cust.altName));
+                c.Add(new XAttribute("IsUploaded", cust.IsUploaded));
+                c.Add(new XAttribute("City", cust.City));
+                c.Add(new XAttribute("Region", cust.Region));
+                prodDB.Add(c);
+            }
+            db.Save(fstream);
+        }
+
+        public bool LoadCustomerData(ref List<Customer> custList) {
+            string filename = "LocalBase.xml";
+            FileStream fstream = null;
+            try {
+                fstream = new FileStream(filename, FileMode.Open);
+            }
+            catch (FileNotFoundException) {
+                MessageBox.Show("Error: Local database file not found!");
+                return true;
+            }
+            if (fstream.CanRead == false) {
+                MessageBox.Show("Database file " + filename + " cannot be read!");
+                return true;
+            }
+            XDocument doc = XDocument.Load(fstream);
+            XElement prodDB = doc.Element("Customers");
+            if (prodDB == null) {
+                MessageBox.Show("There are no Customer data in local database!");
+                return false;
+            }
+            if (prodDB.IsEmpty) {
+                MessageBox.Show("There are no Customer data in local database!");
+                return false;
+            }
+            foreach (Customer cust in custList) {
+                try {
+                    XElement c = (from custRec in prodDB.Element("Customers").Elements()
+                                  where (string)custRec.Attribute("Name") == cust.Name
+                                  select custRec).Single();
+                    cust.IsUploaded = bool.Parse(c.Attribute("IsUploaded").Value);
+                    cust.altName = c.Attribute("AltName").Value;
+                    cust.City = c.Attribute("City").Value;
+                    cust.Region = c.Attribute("Region").Value;
+                }
+                catch { }
+            }
+            return false;
+        }
         private static Dictionary<String, CellEntry> GetCellEntryMap(SpreadsheetsService service, CellFeed cellFeed, List<CellAddress> cellAddrs) {
             CellFeed batchRequest = new CellFeed(new Uri(cellFeed.Self), service);
             foreach (CellAddress cellId in cellAddrs) {
