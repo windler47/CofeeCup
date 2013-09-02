@@ -26,9 +26,12 @@ namespace CoffeeCup
         public DataPicker()
         {
             InitializeComponent();
-            if (app.InitializexmlDoc())
-                //TODO: Write workaround
-                { MessageBox.Show("Произошла ошибка при открытии файла с данными"); }
+            if (app.InitializexmlDoc()){ 
+                MessageBox.Show("Произошла ошибка при открытии файла с данными");
+                MainWindow tmainWindow = new MainWindow();
+                tmainWindow.Show();
+                this.Close();
+            }
             Dictionary<int, Product> ProductsDic = app.GetGoods();
             Dictionary<int, Customer> CustomersDic = app.GetCustomers();
             custList = CustomersDic.Values.ToList<Customer>();

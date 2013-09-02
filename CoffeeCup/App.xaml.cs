@@ -382,11 +382,14 @@ namespace CoffeeCup {
                 fstream = new FileStream(filename, FileMode.CreateNew);
             }
             if (isDBExist){ db = XDocument.Load(fstream);}
-            else { db = new XDocument();}
-            XElement prodDB = db.Element("Products");
+            else { 
+                db = new XDocument();
+                db.Add("Database");
+            }
+            XElement prodDB = db.Root.Element("Products");
             if (prodDB == null) {
-                db.Add(new XElement("Products"));
-                prodDB = db.Element("Products");
+                db.Root.Add(new XElement("Products"));
+                prodDB = db.Root.Element("Products");
             }
             foreach (Product prod in prodList) {
                 XElement p = new XElement("Product");
@@ -413,7 +416,7 @@ namespace CoffeeCup {
                 return true;
             }
             XDocument doc = XDocument.Load(fstream);
-            XElement prodDB = doc.Element("Products");
+            XElement prodDB = doc.Root.Element("Products");
             if (prodDB == null) {
                 MessageBox.Show("There are no Product data in local database!");
                 return false;
@@ -448,11 +451,14 @@ namespace CoffeeCup {
                 fstream = new FileStream(filename, FileMode.CreateNew);
             }
             if (isDBExist) { db = XDocument.Load(fstream); }
-            else { db = new XDocument(); }
-            XElement prodDB = db.Element("Customers");
+            else { 
+                db = new XDocument();
+                db.Add("Database");
+            }
+            XElement prodDB = db.Root.Element("Customers");
             if (prodDB == null) {
-                db.Add(new XElement("Customers"));
-                prodDB = db.Element("Customers");
+                db.Root.Add(new XElement("Customers"));
+                prodDB = db.Root.Element("Customers");
             }
             foreach (Customer cust in custList) {
                 XElement c = new XElement("Customer");

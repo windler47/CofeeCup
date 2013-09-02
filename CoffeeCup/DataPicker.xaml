@@ -62,7 +62,7 @@
                                 <DataGridTextColumn Header="Множитель Машин" Binding="{Binding MachMult, Mode=TwoWay}"/>
                             </DataGrid.Columns>
                         </DataGrid>
-                        <Button Content="Сохранить" Click="LoadPData" Grid.Row="1" HorizontalAlignment="Right" Margin="0,5,10,0"/>
+                        <Button Content="Сохранить" Click="SavePData" Grid.Row="1" HorizontalAlignment="Right" Margin="0,5,10,0"/>
                         <Button Content="Загрузить" Click="LoadPData" Grid.Row="1" HorizontalAlignment="Left" Margin="10,5,0,0"/>
                     </Grid>
                 </TabItem.Content>
