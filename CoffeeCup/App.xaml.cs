@@ -384,7 +384,7 @@ namespace CoffeeCup {
             if (isDBExist){ db = XDocument.Load(fstream);}
             else { 
                 db = new XDocument();
-                db.Add("Database");
+                db.Add(new XElement("Database"));
             }
             XElement prodDB = db.Root.Element("Products");
             if (prodDB == null) {
@@ -453,7 +453,7 @@ namespace CoffeeCup {
             if (isDBExist) { db = XDocument.Load(fstream); }
             else { 
                 db = new XDocument();
-                db.Add("Database");
+                db.Add(new XElement("Database"));
             }
             XElement prodDB = db.Root.Element("Customers");
             if (prodDB == null) {
