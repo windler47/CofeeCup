@@ -399,6 +399,7 @@ namespace CoffeeCup {
                 p.Add(new XAttribute("Cmult", prod.CupsuleMult));
                 prodDB.Add(p);
             }
+            fstream.Seek(0, SeekOrigin.Begin);
             db.Save(fstream);
         }
         public bool LoadProductData(ref List<Product> prodList) {
@@ -469,6 +470,7 @@ namespace CoffeeCup {
                 c.Add(new XAttribute("Region", cust.Region));
                 prodDB.Add(c);
             }
+            fstream.Seek(0, SeekOrigin.Begin);
             db.Save(fstream);
         }
 

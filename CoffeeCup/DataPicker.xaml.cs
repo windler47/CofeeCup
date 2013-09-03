@@ -49,6 +49,8 @@ namespace CoffeeCup
         }
         private void OkKlick(object sender, RoutedEventArgs e) {
             app.UploadData();
+            MessageBox.Show("Это успех!");
+            app.GracefulShutdown();
         }
         #region SINGLE CLICK EDITING
         private void DataGridCell_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -98,15 +100,19 @@ namespace CoffeeCup
 
         private void SavePData(object sender, RoutedEventArgs e) {
             app.SaveProductData(prodList);
+            MessageBox.Show("Это успех!");
         }
         private void LoadPData(object sender, RoutedEventArgs e) {
             app.LoadProductData(ref prodList);
+            MessageBox.Show("Это успех!");
         }
         private void SaveCData(object sender, RoutedEventArgs e) {
             app.SaveCustomerData(custList);
+            MessageBox.Show("Это успех!");
         }
         private void LoadCData(object sender, RoutedEventArgs e) {
             app.LoadCustomerData(ref custList);
+            MessageBox.Show("Это успех!");
         }
     }
 }
