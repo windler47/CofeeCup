@@ -429,7 +429,7 @@ namespace CoffeeCup {
             foreach (Product prod in prodList) {
                 try {
                     XElement p = (from prodRec in prodDB.Element("Products").Elements()
-                                  where (string)prodRec.Attribute("Name") == prod.Name
+                                  where (string)prodRec.Attribute("Name") == prod.Name.Replace("\"", "&quot;")
                                   select prodRec).Single();
                     prod.IsUploaded = bool.Parse(p.Attribute("IsUploaded").Value);
                     prod.CupsuleMult = Convert.ToInt32(p.Attribute("Cmult").Value);
@@ -501,7 +501,7 @@ namespace CoffeeCup {
             foreach (Customer cust in custList) {
                 try {
                     XElement c = (from custRec in prodDB.Element("Customers").Elements()
-                                  where (string)custRec.Attribute("Name") == cust.Name
+                                  where (string)custRec.Attribute("Name") == cust.Name.Replace("\"", "&quot;")
                                   select custRec).Single();
                     cust.IsUploaded = bool.Parse(c.Attribute("IsUploaded").Value);
                     cust.altName = c.Attribute("AltName").Value;
