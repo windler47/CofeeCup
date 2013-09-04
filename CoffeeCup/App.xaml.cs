@@ -392,7 +392,20 @@ namespace CoffeeCup {
                 prodDB = db.Root.Element("Products");
             }
             foreach (Product prod in prodList) {
-                XElement p = new XElement("Product");
+                XElement p = null;
+                if (prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == prod.Name; }).Any()) {
+                    try {
+                        p = prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == prod.Name; }).Single();
+                    }
+                    catch {
+                        p = prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == prod.Name; }).First();
+                        foreach (XElement dub in prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == prod.Name; })) {
+                            if (dub == p) continue;
+                            dub.Remove();
+                        }
+                    }
+                }
+                else { p = new XElement("Product"); }
                 p.Add(new XAttribute("Name", prod.Name));
                 p.Add(new XAttribute("IsUploaded", prod.IsUploaded));
                 p.Add(new XAttribute("Mmult", prod.MachMult));
@@ -401,6 +414,7 @@ namespace CoffeeCup {
             }
             fstream.Seek(0, SeekOrigin.Begin);
             db.Save(fstream);
+            fstream.Close();
         }
         public bool LoadProductData(ref List<Product> prodList) {
             string filename = "LocalBase.xml";
@@ -429,7 +443,7 @@ namespace CoffeeCup {
             foreach (Product prod in prodList) {
                 try {
                     XElement p = (from prodRec in prodDB.Element("Products").Elements()
-                                  where (string)prodRec.Attribute("Name") == prod.Name.Replace("\"", "&quot;")
+                                  where (string)prodRec.Attribute("Name") == prod.Name
                                   select prodRec).Single();
                     prod.IsUploaded = bool.Parse(p.Attribute("IsUploaded").Value);
                     prod.CupsuleMult = Convert.ToInt32(p.Attribute("Cmult").Value);
@@ -501,7 +515,7 @@ namespace CoffeeCup {
             foreach (Customer cust in custList) {
                 try {
                     XElement c = (from custRec in prodDB.Element("Customers").Elements()
-                                  where (string)custRec.Attribute("Name") == cust.Name.Replace("\"", "&quot;")
+                                  where (string)custRec.Attribute("Name") == cust.Name
                                   select custRec).Single();
                     cust.IsUploaded = bool.Parse(c.Attribute("IsUploaded").Value);
                     cust.altName = c.Attribute("AltName").Value;
