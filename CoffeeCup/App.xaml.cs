@@ -257,6 +257,10 @@ namespace CoffeeCup {
                 else if (Customer_Row.ContainsKey(doc.Buyer.Name)) docRow = Customer_Row[doc.Buyer.Name];
                 else {
                     docRow = (uint)AddNewCustomerRow(doc.Buyer);
+                    if (string.IsNullOrWhiteSpace(doc.Buyer.altName)) {
+                        Customer_Row.Add(doc.Buyer.Name, docRow);
+                    }
+                    else { Customer_Row.Add(doc.Buyer.altName, docRow); }
                 }
                 #region Filling Address_Value dictionary
                 foreach (SellingPosition rec in doc.SellingPositions) {
