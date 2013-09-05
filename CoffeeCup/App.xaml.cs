@@ -450,7 +450,7 @@ namespace CoffeeCup {
             }
             foreach (Product prod in prodList) {
                 try {
-                    XElement p = (from prodRec in prodDB.Element("Products").Elements()
+                    XElement p = (from prodRec in prodDB.Elements()
                                   where (string)prodRec.Attribute("Name") == prod.Name
                                   select prodRec).Single();
                     prod.IsUploaded = bool.Parse(p.Attribute("IsUploaded").Value);
