@@ -404,13 +404,18 @@ namespace CoffeeCup {
                             dub.Remove();
                         }
                     }
+                    p.Attribute("IsUploaded").SetValue(prod.IsUploaded);
+                    p.Attribute("Mmult").SetValue(prod.MachMult);
+                    p.Attribute("Cmult").SetValue(prod.CupsuleMult);
                 }
-                else { p = new XElement("Product"); }
-                p.Add(new XAttribute("Name", prod.Name));
-                p.Add(new XAttribute("IsUploaded", prod.IsUploaded));
-                p.Add(new XAttribute("Mmult", prod.MachMult));
-                p.Add(new XAttribute("Cmult", prod.CupsuleMult));
-                prodDB.Add(p);
+                else { 
+                    p = new XElement("Product");
+                    p.Add(new XAttribute("Name", prod.Name));
+                    p.Add(new XAttribute("IsUploaded", prod.IsUploaded));
+                    p.Add(new XAttribute("Mmult", prod.MachMult));
+                    p.Add(new XAttribute("Cmult", prod.CupsuleMult));
+                    prodDB.Add(p);
+                }
             }
             fstream.Seek(0, SeekOrigin.Begin);
             db.Save(fstream);
@@ -428,16 +433,19 @@ namespace CoffeeCup {
             }
             if (fstream.CanRead == false) {
                 MessageBox.Show("Database file " + filename +" cannot be read!");
+                fstream.Close();
                 return true;
             }
             XDocument doc = XDocument.Load(fstream);
             XElement prodDB = doc.Root.Element("Products");
             if (prodDB == null) {
                 MessageBox.Show("There are no Product data in local database!");
+                fstream.Close();
                 return false;
             }
             if (prodDB.IsEmpty) {
                 MessageBox.Show("There are no Product data in local database!");
+                fstream.Close();
                 return false;
             }
             foreach (Product prod in prodList) {
@@ -451,6 +459,7 @@ namespace CoffeeCup {
                 }
                 catch {}
             }
+            fstream.Close();
             return false;
             
         }
@@ -476,16 +485,36 @@ namespace CoffeeCup {
                 prodDB = db.Root.Element("Customers");
             }
             foreach (Customer cust in custList) {
-                XElement c = new XElement("Customer");
-                c.Add(new XAttribute("Name", cust.Name));
-                c.Add(new XAttribute("AltName", cust.altName));
-                c.Add(new XAttribute("IsUploaded", cust.IsUploaded));
-                c.Add(new XAttribute("City", cust.City));
-                c.Add(new XAttribute("Region", cust.Region));
-                prodDB.Add(c);
+                XElement c = null;
+                if (prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == cust.Name; }).Any()) {
+                    try {
+                        c = prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == cust.Name; }).Single();
+                    }
+                    catch {
+                        c = prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == cust.Name; }).First();
+                        foreach (XElement dub in prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == cust.Name; })) {
+                            if (dub == c) continue;
+                            dub.Remove();
+                        }
+                    }
+                    c.Attribute("AltName").SetValue(cust.altName);
+                    c.Attribute("IsUploaded").SetValue(cust.IsUploaded);
+                    c.Attribute("City").SetValue(cust.City);
+                    c.Attribute("Region").SetValue(cust.Region);
+                }
+                else { 
+                    c = new XElement("Customer");
+                    c.Add(new XAttribute("Name", cust.Name));
+                    c.Add(new XAttribute("AltName", cust.altName));
+                    c.Add(new XAttribute("IsUploaded", cust.IsUploaded));
+                    c.Add(new XAttribute("City", cust.City));
+                    c.Add(new XAttribute("Region", cust.Region));
+                    prodDB.Add(c);
+                }
             }
             fstream.Seek(0, SeekOrigin.Begin);
             db.Save(fstream);
+            fstream.Close();
         }
 
         public bool LoadCustomerData(ref List<Customer> custList) {
@@ -500,21 +529,24 @@ namespace CoffeeCup {
             }
             if (fstream.CanRead == false) {
                 MessageBox.Show("Database file " + filename + " cannot be read!");
+                fstream.Close();
                 return true;
             }
             XDocument doc = XDocument.Load(fstream);
-            XElement prodDB = doc.Element("Customers");
-            if (prodDB == null) {
+            XElement custDB = doc.Root.Element("Customers");
+            if (custDB == null) {
                 MessageBox.Show("There are no Customer data in local database!");
+                fstream.Close();
                 return false;
             }
-            if (prodDB.IsEmpty) {
+            if (custDB.IsEmpty) {
                 MessageBox.Show("There are no Customer data in local database!");
+                fstream.Close();
                 return false;
             }
             foreach (Customer cust in custList) {
                 try {
-                    XElement c = (from custRec in prodDB.Element("Customers").Elements()
+                    XElement c = (from custRec in custDB.Elements()
                                   where (string)custRec.Attribute("Name") == cust.Name
                                   select custRec).Single();
                     cust.IsUploaded = bool.Parse(c.Attribute("IsUploaded").Value);
@@ -524,6 +556,7 @@ namespace CoffeeCup {
                 }
                 catch { }
             }
+            fstream.Close();
             return false;
         }
         private static Dictionary<String, CellEntry> GetCellEntryMap(SpreadsheetsService service, CellFeed cellFeed, List<CellAddress> cellAddrs) {

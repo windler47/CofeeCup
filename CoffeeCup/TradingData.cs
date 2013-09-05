@@ -5,17 +5,54 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Windows;
+using System.ComponentModel;
 
 
 namespace CoffeeCup
 {
-    public class Customer
+    public class Customer : INotifyPropertyChanged
     {
-        public string City { get; set; }
-        public string Region { get; set; }
+        string customerAltName;
+        string customerCity;
+        string customerRegion;
+        bool customerIsUploaded;
+        public string City {
+            get { return customerCity; }
+            set {
+                if (value != this.customerCity) {
+                    this.customerCity = value;
+                    NotifyPropertyChanged("City");
+                }
+            } 
+        }
+        public string Region {
+            get { return customerRegion; }
+            set {
+                if (value != this.customerRegion) {
+                    this.customerRegion = value;
+                    NotifyPropertyChanged("Region");
+                }
+            } 
+        }
         public string Name { get; private set; }
-        public string altName { get; set; }
-        public bool IsUploaded { get; set; }
+        public string altName {
+            get { return this.customerAltName; }
+            set {
+                if (value != this.customerAltName) {
+                    this.customerAltName = value;
+                    NotifyPropertyChanged("altName");
+                }
+            } 
+        }
+        public bool IsUploaded {
+            get { return this.customerIsUploaded; }
+            set {
+                if (value != this.customerIsUploaded) {
+                    this.customerIsUploaded = value;
+                    NotifyPropertyChanged("IsUploaded");
+                }
+            } 
+        }
         public Customer(string name)
         {
             Name = name;
@@ -32,20 +69,60 @@ namespace CoffeeCup
             Region = region;
             IsUploaded = true;
         }
+        
         private Customer() { }
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void NotifyPropertyChanged(String propertyName = "") {
+            if (PropertyChanged != null) {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
     }
-    public class Product
+    public class Product : INotifyPropertyChanged
     {
         public string Name { get; private set; }
-        public int CupsuleMult { get; set; }
-        public int MachMult { get; set; }
-        public bool IsUploaded { get; set; }
+        public int CupsuleMult {
+            get { return this.pCupsuleMult; }
+            set {
+                if (value != this.pCupsuleMult) {
+                    this.pCupsuleMult = value;
+                    NotifyPropertyChanged("CupsuleMult");
+                }
+            }
+        }
+        public int MachMult {
+            get { return this.pMachMult; }
+            set {
+                if (value != this.pMachMult) {
+                    this.pMachMult = value;
+                    NotifyPropertyChanged("MachMult");
+                }
+            }
+        }
+        public bool IsUploaded {
+            get { return this.prodIsUploaded; }
+            set {
+                if (value != this.prodIsUploaded) {
+                    this.prodIsUploaded = value;
+                    NotifyPropertyChanged("IsUploaded");
+                }
+            }
+        }
         public Product(string name)
         {
             Name = name;
             CupsuleMult = 1;
         }
         private Product() { }
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void NotifyPropertyChanged(String propertyName = "") {
+            if (PropertyChanged != null) {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+        int pCupsuleMult;
+        int pMachMult;
+        bool prodIsUploaded;
     }
     public class SellingPosition
     {
