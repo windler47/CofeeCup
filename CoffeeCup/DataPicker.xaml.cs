@@ -21,8 +21,8 @@ namespace CoffeeCup
     public partial class DataPicker : Window
     {
         CoffeeCup.App app = (CoffeeCup.App)App.Current;
-        List<Customer> custList;
-        List<Product> prodList;
+        List<Customer> custList = new List<Customer>();
+        List<Product> prodList = new List<Product>();
         public DataPicker()
         {
             InitializeComponent();
@@ -34,9 +34,17 @@ namespace CoffeeCup
             }
             Dictionary<int, Product> ProductsDic = app.GetGoods();
             Dictionary<int, Customer> CustomersDic = app.GetCustomers();
-            custList = CustomersDic.Values.ToList<Customer>();
-            prodList = ProductsDic.Values.ToList<Product>();
+            //custList = CustomersDic.Values.ToList<Customer>();
+            //prodList = ProductsDic.Values.ToList<Product>();
             app.GetRealisations(CustomersDic, ProductsDic);
+            foreach (Realization real in app.realizations) {
+                if (!custList.Exists((e) => { return e.Name == real.Buyer.Name; })) custList.Add(real.Buyer);
+                foreach (SellingPosition sp in real.SellingPositions) {
+                    if (!prodList.Exists((e) => { return e.Name == sp.Product.Name; })) {
+                        prodList.Add(sp.Product);
+                    }
+                }
+            }
             if (app.GetCustomerData(ref custList)) {
                 MessageBox.Show("Ошибка обращения к документу");
             }

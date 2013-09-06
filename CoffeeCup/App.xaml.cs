@@ -29,7 +29,7 @@ namespace CoffeeCup {
         public string DocUri; //Document key
         public string docPath; //Document Path
         public XElement xmlDoc;
-        List<Realization> realizations;
+        public List<Realization> realizations;
         public Dictionary<string, uint> Customer_Row = new Dictionary<string, uint>();
         WorksheetEntry TargetWS;
         public string GAuthGetLink() {
