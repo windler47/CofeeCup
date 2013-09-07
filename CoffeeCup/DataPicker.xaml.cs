@@ -1,17 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using System.Globalization;
 
 namespace CoffeeCup
 {
@@ -111,16 +102,16 @@ namespace CoffeeCup
             MessageBox.Show("Это успех!");
         }
         private void LoadPData(object sender, RoutedEventArgs e) {
-            app.LoadProductData(ref prodList);
-            MessageBox.Show("Это успех!");
+            if (app.LoadProductData(ref prodList)) MessageBox.Show("Это успех!");
+            else MessageBox.Show("Это провал!");
         }
         private void SaveCData(object sender, RoutedEventArgs e) {
             app.SaveCustomerData(custList);
             MessageBox.Show("Это успех!");
         }
         private void LoadCData(object sender, RoutedEventArgs e) {
-            app.LoadCustomerData(ref custList);
-            MessageBox.Show("Это успех!");
+            if (app.LoadCustomerData(ref custList)) MessageBox.Show("Это успех!");
+            else MessageBox.Show("Это провал!");
         }
     }
 }

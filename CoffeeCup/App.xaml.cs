@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
+using System.Globalization;
 using System.IO;
-using System.Xml;
+using System.Linq;
+using System.Security;
+using System.Windows;
 using System.Xml.Linq;
 using Google.GData.Client;
 using Google.GData.Spreadsheets;
-using System.Security;
-using System.Globalization;
 
 namespace CoffeeCup {
     /// <summary>
