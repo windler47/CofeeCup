@@ -102,7 +102,7 @@ namespace CoffeeCup
             MessageBox.Show("Это успех!");
         }
         private void LoadPData(object sender, RoutedEventArgs e) {
-            if (app.LoadProductData(ref prodList)) MessageBox.Show("Это успех!");
+            if (!app.LoadProductData(ref prodList)) MessageBox.Show("Это успех!");
             else MessageBox.Show("Это провал!");
         }
         private void SaveCData(object sender, RoutedEventArgs e) {
@@ -110,7 +110,7 @@ namespace CoffeeCup
             MessageBox.Show("Это успех!");
         }
         private void LoadCData(object sender, RoutedEventArgs e) {
-            if (app.LoadCustomerData(ref custList)) MessageBox.Show("Это успех!");
+            if (!app.LoadCustomerData(ref custList)) MessageBox.Show("Это успех!");
             else MessageBox.Show("Это провал!");
         }
     }
