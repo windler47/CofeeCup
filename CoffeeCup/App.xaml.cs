@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Security;
 using System.Windows;
@@ -372,7 +373,9 @@ namespace CoffeeCup {
             fs.Close();
         }
         public void SaveProductData(List<Product> prodList) {
-            string filename = "LocalBase.xml";
+            IsolatedStorageFile isoStore = IsolatedStorageFile.GetStore(IsolatedStorageScope.User |
+            IsolatedStorageScope.Assembly, null, null);
+            string filename = @"C:\Coffee Cup\LocalBase.xml";
             FileStream fstream = null;
             XDocument db = null;
             bool isDBExist = true;
@@ -422,7 +425,7 @@ namespace CoffeeCup {
             fstream.Close();
         }
         public bool LoadProductData(ref List<Product> prodList) {
-            string filename = "LocalBase.xml";
+            string filename = @"C:\Coffee Cup\LocalBase.xml";
             FileStream fstream = null;
             try {
                 fstream = new FileStream(filename, FileMode.Open);
@@ -465,7 +468,7 @@ namespace CoffeeCup {
         }
 
         public void SaveCustomerData(List<Customer> custList) {
-            string filename = "LocalBase.xml";
+            string filename = @"C:\Coffee Cup\LocalBase.xml";
             FileStream fstream = null;
             XDocument db = null;
             bool isDBExist = true;
@@ -518,7 +521,7 @@ namespace CoffeeCup {
         }
 
         public bool LoadCustomerData(ref List<Customer> custList) {
-            string filename = "LocalBase.xml";
+            string filename = @"C:\Coffee Cup\LocalBase.xml";
             FileStream fstream = null;
             try {
                 fstream = new FileStream(filename, FileMode.Open);
