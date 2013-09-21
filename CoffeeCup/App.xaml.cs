@@ -29,6 +29,7 @@ namespace CoffeeCup {
         public List<Realization> realizations;
         public Dictionary<string, uint> Customer_Row = new Dictionary<string, uint>();
         WorksheetEntry TargetWS;
+        Dictionary<int, WorksheetEntry> WS_year;
         public string GAuthGetLink() {
             return OAuthUtil.CreateOAuth2AuthorizationUrl(parameters);
         }
@@ -193,6 +194,20 @@ namespace CoffeeCup {
             // Get the first worksheet of the spreadsheet.
             // TODO: Choose a worksheet more intelligently.
             WorksheetFeed wsFeed = spreadsheet.Worksheets;
+            foreach (WorksheetEntry ws in wsFeed.Entries)
+            {
+                int wsYear;
+                if(int.TryParse(ws.Title.Text,out wsYear)){
+                    WS_year.Add(wsYear, ws);
+                }
+                else {
+                    MessageBox.Show("Название лсита " + ws.Title.Text + " не распознано как год.");
+                }
+            }
+            if (!WS_year.Any()) {
+                WS_year.Add(2013, (WorksheetEntry)wsFeed.Entries[0]);
+                MessageBox.Show("Лист " + ((WorksheetEntry)wsFeed.Entries[0]).Title.Text + "считается соотвествующим 2013 году!");
+            }
             TargetWS = (WorksheetEntry)wsFeed.Entries[0];
             // Fetch the cell feed of the worksheet.
             CellQuery cellQuery = new CellQuery(TargetWS.CellFeedLink);

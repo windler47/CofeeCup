@@ -25,8 +25,6 @@ namespace CoffeeCup
             }
             Dictionary<int, Product> ProductsDic = app.GetGoods();
             Dictionary<int, Customer> CustomersDic = app.GetCustomers();
-            //custList = CustomersDic.Values.ToList<Customer>();
-            //prodList = ProductsDic.Values.ToList<Product>();
             app.GetRealisations(CustomersDic, ProductsDic);
             foreach (Realization real in app.realizations) {
                 if (!custList.Exists((e) => { return e.Name == real.Buyer.Name; })) custList.Add(real.Buyer);
