@@ -20,8 +20,7 @@ namespace CoffeeCup
         }
         private void AuthOKClick(object sender, RoutedEventArgs e)
         {
-            app.parameters.AccessCode = GAccessCode.Text;
-            app.GAuthStep2();
+            app.GAuthStep2(GAccessCode.Text);
             DataPicker tDataPicker = new DataPicker();
             tDataPicker.Show();
             this.Close();

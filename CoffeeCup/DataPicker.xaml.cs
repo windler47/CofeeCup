@@ -19,24 +19,30 @@ namespace CoffeeCup
             InitializeComponent();
             if (app.InitializexmlDoc()){ 
                 MessageBox.Show("Произошла ошибка при открытии файла с данными");
-                MainWindow tmainWindow = new MainWindow();
+                MainWindow tmainWindow = new MainWindow(app.docUri, app.docPath);
                 tmainWindow.Show();
                 this.Close();
             }
             Dictionary<int, Product> ProductsDic = app.GetGoods();
             Dictionary<int, Customer> CustomersDic = app.GetCustomers();
             app.GetRealisations(CustomersDic, ProductsDic);
-            foreach (Realization real in app.realizations) {
-                if (!custList.Exists((e) => { return e.Name == real.Buyer.Name; })) custList.Add(real.Buyer);
-                foreach (SellingPosition sp in real.SellingPositions) {
-                    if (!prodList.Exists((e) => { return e.Name == sp.Product.Name; })) {
-                        prodList.Add(sp.Product);
+            foreach (List<Realization> realizationsList in app.realizations.Values) {
+                foreach (Realization realization in realizationsList) {
+                    if (!custList.Exists((e) => { return e.Name == realization.Buyer.Name; })) custList.Add(realization.Buyer);
+                    foreach (SellingPosition sp in realization.SellingPositions) {
+                        if (!prodList.Exists((e) => { return e.Name == sp.Product.Name; })) {
+                            prodList.Add(sp.Product);
+                        }
                     }
                 }
             }
-            if (app.GetCustomerData(ref custList)) {
-                MessageBox.Show("Ошибка обращения к документу");
+            if (app.WorksheetFeedInit()) {
+                MessageBox.Show("Произошла ошибка при попытке обращения к Google документу");
+                MainWindow tmainWindow = new MainWindow(app.docUri, app.docPath);
+                tmainWindow.Show();
+                this.Close();
             }
+//TODO: try connect to Google document here.
             CustomersDataGrid.DataContext = custList;
             ProductsDataGrid.DataContext = prodList;
         }    
