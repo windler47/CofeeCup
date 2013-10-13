@@ -8,9 +8,9 @@ using System.Windows;
 // набора атрибутов. Измените значения этих атрибутов, чтобы изменить сведения,
 // связанные со сборкой.
 [assembly: AssemblyTitle("CoffeeCup")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("1C to Google spreadsheets data loader.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Alira")]
 [assembly: AssemblyProduct("CoffeeCup")]
 [assembly: AssemblyCopyright("Copyright ©  2013")]
 [assembly: AssemblyTrademark("")]
@@ -53,3 +53,4 @@ using System.Windows;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("0.1.*")]
 //[assembly: AssemblyFileVersion("0.0.*")]
+[assembly: NeutralResourcesLanguageAttribute("ru-RU")]

@@ -283,8 +283,7 @@ namespace CoffeeCup {
                     if (rec.Product.IsUploaded) contains_cofee = true;
                 }
                 if (!doc.Buyer.IsUploaded || !contains_cofee) continue;
-
-                uint docColOffset = 3 + 6 * (((uint)doc.Date.Month + 12 * ((uint)doc.Date.Year - 2013))-1);
+                uint docColOffset = 3 + 6 * ((uint)doc.Date.Month-1);
                 uint docRow = 0;
                 if (worksheet.cust_Row.ContainsKey(doc.Buyer.altName)) docRow = worksheet.cust_Row[doc.Buyer.altName];
                 else if (worksheet.cust_Row.ContainsKey(doc.Buyer.Name)) docRow = worksheet.cust_Row[doc.Buyer.Name];
@@ -482,7 +481,7 @@ namespace CoffeeCup {
             try {
                 fstream = new FileStream(filename, FileMode.Open);
             }
-            catch (FileNotFoundException) {
+            catch {
                 MessageBox.Show("Error: Local database file not found!");
                 return true;
             }

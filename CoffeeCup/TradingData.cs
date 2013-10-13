@@ -249,7 +249,7 @@ namespace CoffeeCup
             for (int i = 1; i < 12; i++) {
                 custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[6 + i * 6].LocalName, Value = medCup });
                 custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[5 + i * 6].LocalName, Value = machNum });
-                cupSum += string.Format("+R0C{1}", 3 + i * 6);
+                cupSum += string.Format("+R0C{0}", 3 + i * 6);
             }
             custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[75].LocalName, Value = cupSum });
             custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[76].LocalName, Value = machSum });
@@ -284,6 +284,7 @@ namespace CoffeeCup
     public class CCupWSFeed {
         public List<CCupWSEntry> EntriesList { get; private set; }
         public CCupWSFeed(WorksheetFeed worksheetFeed, SpreadsheetsService spreadsheetsService) {
+            EntriesList = new List<CCupWSEntry>();
             iWorksheetFeed = worksheetFeed;
             iSpreadsheetService = spreadsheetsService;
             foreach (WorksheetEntry wsEntry in worksheetFeed.Entries) {

@@ -7,39 +7,19 @@ using System.Xml;
 using System.Xml.Linq;
 using System.IO;
 using System.Globalization;
+using System.Windows;
 
 namespace testApp {
     class Program {
         static void Main(string[] args) {
-            CultureInfo t = new CultureInfo("en-US");
-            double d = Convert.ToDouble("1234.5",t);
-            Console.Write(d);
-            string directory = AppDomain.CurrentDomain.BaseDirectory;
-            Console.WriteLine(directory);
-            DirectoryInfo dir = new DirectoryInfo(directory); 
-            foreach (FileInfo files in dir.GetFiles("*.xml")) {
-                if (files.Name.Substring(0, 4) == "test") continue;
-                Console.WriteLine(files.Name);
-                Console.WriteLine("=============");
-                XElement xmlDoc = XElement.Load(files.Name);
-                IEnumerable<XElement> org = from fobject in xmlDoc.Elements("Объект")
-                                            where (string)fobject.Attribute("ИмяПравила") == "Организации"
-                                            select fobject;
-                Console.WriteLine("Организации:");
-                foreach (XElement organization in org) {
-                    Console.WriteLine(organization.Element("Свойство").Element("Значение").Value);
-                }
-                Console.WriteLine("Склады:");
-                IEnumerable<XElement> war = from fobject in xmlDoc.Elements("Объект")
-                                            where (string)fobject.Attribute("ИмяПравила") == "Склады"
-                                            select fobject;
-                foreach (XElement wrah in war) {
-                    XElement prop = wrah.Element("Свойство");
-                    Console.WriteLine(prop.Element("Значение").Value);
-                }
-                Console.WriteLine("=============");
-            }
-            Console.Read();
+            string appFileName = Environment.GetCommandLineArgs()[0];
+            string directory = Path.GetDirectoryName(appFileName);
+            //string envPath = Environment.GetEnvironmentVariable("PATH");
+            //Environment.SetEnvironmentVariable(envPath + ";" + yourPath);
+            //edits the PATH environment variable for the current process.
+            //
+            string exeDirectory = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            string fileName = System.IO.Path.Combine(exeDirectory, System.IO.Path.Combine("Administration", "adm.txt"));
         }
     }
 }
