@@ -4,6 +4,8 @@ using System.ComponentModel;
 using Google.GData.Client;
 using Google.GData.Spreadsheets;
 using System.Linq;
+using System.IO;
+using System.Xml.Linq;
 
 
 namespace CoffeeCup
@@ -294,6 +296,95 @@ namespace CoffeeCup
         WorksheetFeed iWorksheetFeed;
         SpreadsheetsService iSpreadsheetService;
         private CCupWSFeed() { }
+    }
+    public class LocalDatabase {
+        XElement productDatabase;
+        XElement customerDatabase;
+        public Dictionary<string, Customer> Customers { get; private set; }
+        public Dictionary<string, Product> Products { get; private set; }
+        public void UpdateDatabase(List<Customer> customerList ) {
+            foreach (Customer customer in customerList) {
+                if (Customers.ContainsKey(customer.Name)) {
+                    UpdateEntryValue(customer);
+                }
+                else AddNewEntry(customer);
+            }
+        }
+        public void UpdateDatabase(List<Product> productList) {
+            foreach (Product product in productList) {
+                if (Products.ContainsKey(product.Name)) UpdateEntryValue(product);
+                else AddNewEntry(product);
+            }
+        }
+        void UpdateEntryValue(Customer customer){
+            Customers[customer.Name] = customer;
+            XElement dCustomer = customerDatabase.Elements().Where((c) => c.Attribute("Name").Value == customer.Name).Single();
+            dCustomer.Attribute("AltName").SetValue(customer.altName);
+            dCustomer.Attribute("City").SetValue(customer.City);
+            dCustomer.Attribute("Region").SetValue(customer.Region);
+            dCustomer.Attribute("IsUploaded").SetValue(customer.IsUploaded);
+        }
+        void UpdateEntryValue(Product product) {
+            Products[product.Name] = product;
+            XElement dProduct = productDatabase.Elements().Where((p) => p.Attribute("Name").Value == product.Name).Single();
+            dProduct.Attribute("IsUploaded").SetValue(product.IsUploaded);
+            dProduct.Attribute("Cmult").SetValue(product.CupsuleMult);
+            dProduct.Attribute("Mmult").SetValue(product.MachMult);
+        }
+        void AddNewEntry(Customer customer) {
+            Customers[customer.Name] = customer;
+            XElement dCustomer = new XElement("Customer");
+            dCustomer.Add(new XAttribute("Name", customer.Name));
+            dCustomer.Add(new XAttribute("AltName", customer.altName));
+            dCustomer.Add(new XAttribute("IsUploaded", customer.IsUploaded));
+            dCustomer.Add(new XAttribute("City", customer.City));
+            dCustomer.Add(new XAttribute("Region", customer.Region));
+            customerDatabase.Add(dCustomer);
+        }
+        void AddNewEntry(Product product) {
+            Products[product.Name] = product;
+            XElement dProduct = new XElement("Product");
+            dProduct.Add(new XAttribute("Name", product.Name));
+            dProduct.Add(new XAttribute("IsUploaded", product.IsUploaded));
+            dProduct.Add(new XAttribute("Mmult", product.MachMult));
+            dProduct.Add(new XAttribute("Cmult", product.CupsuleMult));
+            productDatabase.Add(dProduct);
+        }
+        private LocalDatabase() { }
+        public LocalDatabase(string databasePath) {
+            FileStream fstream = null;
+            fstream = new FileStream(databasePath, FileMode.OpenOrCreate);
+            XDocument db = XDocument.Load(fstream);
+            if (db.Root == null) {
+                db.Add(new XElement("Database"));
+            }
+            productDatabase = db.Root.Element("Products");
+            if (productDatabase == null) {
+                db.Root.Add(new XElement("Products"));
+                productDatabase = db.Root.Element("Products");
+            }
+            customerDatabase = db.Root.Element("Customers");
+            if (customerDatabase == null) {
+                db.Root.Add(new XElement("Customers"));
+                customerDatabase = db.Root.Element("Customers");
+            }
+            foreach (XElement product in productDatabase.Elements()) {
+                Product tProduct = new Product(product.Attribute("Name").Value);
+                tProduct.IsUploaded = bool.Parse(product.Attribute("IsUploaded").Value);
+                tProduct.CupsuleMult = Convert.ToInt32(product.Attribute("Cmult").Value);
+                tProduct.MachMult = Convert.ToInt32(product.Attribute("Mmult").Value);
+                Products.Add(tProduct.Name, tProduct);
+            }
+            foreach (XElement customer in customerDatabase.Elements()) {
+                Customer tCustomer = new Customer(customer.Attribute("Name").Value);
+                tCustomer.IsUploaded = bool.Parse(customer.Attribute("IsUploaded").Value);
+                tCustomer.altName = customer.Attribute("AltName").Value;
+                tCustomer.City = customer.Attribute("City").Value;
+                tCustomer.Region = customer.Attribute("Region").Value;
+                Customers.Add(tCustomer.Name, tCustomer);
+            }
+            fstream.Close();
+        }
     }
 }
 

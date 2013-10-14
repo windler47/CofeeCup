@@ -10,6 +10,7 @@ using System.Xml.Linq;
 using Google.GData.Client;
 using Google.GData.Spreadsheets;
 
+
 namespace CoffeeCup {
     /// <summary>
     /// Логика взаимодействия для App.xaml
@@ -23,11 +24,12 @@ namespace CoffeeCup {
         #endregion
         OAuth2Parameters parameters;
         SpreadsheetsService GSpreadsheetService;
+        CCupWSFeed worksheetsFeed;
         public string docUri; //Document key
         public string docPath; //Document Path
         public XElement xmlDoc;
         public Dictionary<uint, List<Realization>> realizations;
-        CCupWSFeed worksheetsFeed;
+        string appPath;
         public string GAuthGetLink() {
             return OAuthUtil.CreateOAuth2AuthorizationUrl(parameters);
         }
@@ -393,7 +395,7 @@ namespace CoffeeCup {
         public bool LoadGRefreshToken() {
             FileStream fs;
             try {
-                fs = new FileStream("cc.bin", FileMode.Open);
+                fs = new FileStream(Path.Combine(appPath,"cc.bin"), FileMode.Open);
             }
             catch {
                 return true;
@@ -401,6 +403,7 @@ namespace CoffeeCup {
             BinaryReader br = new BinaryReader(fs);
             parameters.RefreshToken = br.ReadString();
             OAuthUtil.RefreshAccessToken(parameters);
+            fs.Close();
             if (parameters.AccessToken == null) return true;
             return false;
         }
@@ -416,17 +419,16 @@ namespace CoffeeCup {
             parameters.Scope = SCOPE;
             GSpreadsheetService = new SpreadsheetsService("CoffeeCup");
             realizations = new Dictionary<uint, List<Realization>>();
+            appPath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
         }
         private void SaveGRefreshToken(string refreshToken) {
-            FileStream fs = new FileStream("cc.bin", FileMode.Create);
+            FileStream fs = new FileStream(Path.Combine(appPath, "cc.bin"), FileMode.Create);
             BinaryWriter bw = new BinaryWriter(fs);
             bw.Write(refreshToken);
             fs.Close();
         }
         public void SaveProductData(List<Product> prodList) {
-            IsolatedStorageFile isoStore = IsolatedStorageFile.GetStore(IsolatedStorageScope.User |
-            IsolatedStorageScope.Assembly, null, null);
-            string filename = @"C:\Coffee Cup\LocalBase.xml";
+            string filename = Path.Combine(appPath,"LocalBase.xml");
             FileStream fstream = null;
             XDocument db = null;
             bool isDBExist = true;
@@ -476,7 +478,7 @@ namespace CoffeeCup {
             fstream.Close();
         }
         public bool LoadProductData(ref List<Product> prodList) {
-            string filename = @"C:\Coffee Cup\LocalBase.xml";
+            string filename = Path.Combine(appPath, "LocalBase.xml");
             FileStream fstream = null;
             try {
                 fstream = new FileStream(filename, FileMode.Open);
@@ -517,9 +519,8 @@ namespace CoffeeCup {
             return false;
             
         }
-
         public void SaveCustomerData(List<Customer> custList) {
-            string filename = @"C:\Coffee Cup\LocalBase.xml";
+            string filename = Path.Combine(appPath, "LocalBase.xml");
             FileStream fstream = null;
             XDocument db = null;
             bool isDBExist = true;
@@ -570,9 +571,8 @@ namespace CoffeeCup {
             db.Save(fstream);
             fstream.Close();
         }
-
         public bool LoadCustomerData(ref List<Customer> custList) {
-            string filename = @"C:\Coffee Cup\LocalBase.xml";
+            string filename = Path.Combine(appPath, "LocalBase.xml");
             FileStream fstream = null;
             try {
                 fstream = new FileStream(filename, FileMode.Open);

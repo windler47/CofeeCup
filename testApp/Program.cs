@@ -20,6 +20,10 @@ namespace testApp {
             //
             string exeDirectory = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             string fileName = System.IO.Path.Combine(exeDirectory, System.IO.Path.Combine("Administration", "adm.txt"));
+            Console.WriteLine("First method:");
+            Console.WriteLine(directory);
+            Console.WriteLine("Second method:");
+            Console.WriteLine(exeDirectory);
         }
     }
 }
