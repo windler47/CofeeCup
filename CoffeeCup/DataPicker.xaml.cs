@@ -12,6 +12,7 @@ namespace CoffeeCup
     public partial class DataPicker : Window
     {
         CoffeeCup.App app = (CoffeeCup.App)App.Current;
+        LocalDatabase db;
         List<Customer> custList = new List<Customer>();
         List<Product> prodList = new List<Product>();
         public DataPicker()
@@ -42,7 +43,7 @@ namespace CoffeeCup
                 tmainWindow.Show();
                 this.Close();
             }
-//TODO: try connect to Google document here.
+            db = new LocalDatabase(app.appPath);
             CustomersDataGrid.DataContext = custList;
             ProductsDataGrid.DataContext = prodList;
         }    
@@ -102,20 +103,35 @@ namespace CoffeeCup
         #endregion
 
         private void SavePData(object sender, RoutedEventArgs e) {
-            app.SaveProductData(prodList);
-            MessageBox.Show("Это успех!");
+            db.UpdateDatabase(prodList);
+            db.SyncToDrive();
+            MessageBox.Show("Данные сохранены успешно.");
         }
         private void LoadPData(object sender, RoutedEventArgs e) {
-            if (!app.LoadProductData(ref prodList)) MessageBox.Show("Это успех!");
-            else MessageBox.Show("Это провал!");
+            foreach (Product product in prodList) {
+                if (db.Products.ContainsKey(product.Name)) {
+                    Product p = db.Products[product.Name];
+                    product.IsUploaded = p.IsUploaded;
+                    product.CupsuleMult = p.CupsuleMult;
+                    product.MachMult = p.MachMult;
+                }
+            }
         }
         private void SaveCData(object sender, RoutedEventArgs e) {
-            app.SaveCustomerData(custList);
-            MessageBox.Show("Это успех!");
+            db.UpdateDatabase(custList);
+            db.SyncToDrive();
+            MessageBox.Show("Данные сохранены успешно.");
         }
         private void LoadCData(object sender, RoutedEventArgs e) {
-            if (!app.LoadCustomerData(ref custList)) MessageBox.Show("Это успех!");
-            else MessageBox.Show("Это провал!");
+            foreach (Customer customer in custList) {
+                if (db.Customers.ContainsKey(customer.Name)) {
+                    Customer c = db.Customers[customer.Name];
+                    customer.altName = c.altName;
+                    customer.Region = c.Region;
+                    customer.City = c.City;
+                    customer.IsUploaded = c.IsUploaded;
+                }
+            }
         }
     }
 }

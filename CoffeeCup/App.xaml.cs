@@ -29,7 +29,7 @@ namespace CoffeeCup {
         public string docPath; //Document Path
         public XElement xmlDoc;
         public Dictionary<uint, List<Realization>> realizations;
-        string appPath;
+        public string appPath;
         public string GAuthGetLink() {
             return OAuthUtil.CreateOAuth2AuthorizationUrl(parameters);
         }
@@ -404,8 +404,7 @@ namespace CoffeeCup {
             parameters.RefreshToken = br.ReadString();
             OAuthUtil.RefreshAccessToken(parameters);
             fs.Close();
-            if (parameters.AccessToken == null) return true;
-            return false;
+            return parameters.AccessToken == null;
         }
         public void GracefulShutdown() {
             SaveGRefreshToken(parameters.RefreshToken);
@@ -426,192 +425,6 @@ namespace CoffeeCup {
             BinaryWriter bw = new BinaryWriter(fs);
             bw.Write(refreshToken);
             fs.Close();
-        }
-        public void SaveProductData(List<Product> prodList) {
-            string filename = Path.Combine(appPath,"LocalBase.xml");
-            FileStream fstream = null;
-            XDocument db = null;
-            bool isDBExist = true;
-            try{fstream = new FileStream(filename, FileMode.Open);}
-            catch {
-                isDBExist = false;
-                fstream = new FileStream(filename, FileMode.CreateNew);
-            }
-            if (isDBExist){ db = XDocument.Load(fstream);}
-            else { 
-                db = new XDocument();
-                db.Add(new XElement("Database"));
-            }
-            XElement prodDB = db.Root.Element("Products");
-            if (prodDB == null) {
-                db.Root.Add(new XElement("Products"));
-                prodDB = db.Root.Element("Products");
-            }
-            foreach (Product prod in prodList) {
-                XElement p = null;
-                if (prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == prod.Name; }).Any()) {
-                    try {
-                        p = prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == prod.Name; }).Single();
-                    }
-                    catch {
-                        p = prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == prod.Name; }).First();
-                        foreach (XElement dub in prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == prod.Name; })) {
-                            if (dub == p) continue;
-                            dub.Remove();
-                        }
-                    }
-                    p.Attribute("IsUploaded").SetValue(prod.IsUploaded);
-                    p.Attribute("Mmult").SetValue(prod.MachMult);
-                    p.Attribute("Cmult").SetValue(prod.CupsuleMult);
-                }
-                else { 
-                    p = new XElement("Product");
-                    p.Add(new XAttribute("Name", prod.Name));
-                    p.Add(new XAttribute("IsUploaded", prod.IsUploaded));
-                    p.Add(new XAttribute("Mmult", prod.MachMult));
-                    p.Add(new XAttribute("Cmult", prod.CupsuleMult));
-                    prodDB.Add(p);
-                }
-            }
-            fstream.Seek(0, SeekOrigin.Begin);
-            db.Save(fstream);
-            fstream.Close();
-        }
-        public bool LoadProductData(ref List<Product> prodList) {
-            string filename = Path.Combine(appPath, "LocalBase.xml");
-            FileStream fstream = null;
-            try {
-                fstream = new FileStream(filename, FileMode.Open);
-            }
-            catch {
-                MessageBox.Show("Error: Local database file not found!");
-                return true;
-            }
-            if (fstream.CanRead == false) {
-                MessageBox.Show("Database file " + filename +" cannot be read!");
-                fstream.Close();
-                return true;
-            }
-            XDocument doc = XDocument.Load(fstream);
-            XElement prodDB = doc.Root.Element("Products");
-            if (prodDB == null) {
-                MessageBox.Show("There are no Product data in local database!");
-                fstream.Close();
-                return false;
-            }
-            if (prodDB.IsEmpty) {
-                MessageBox.Show("There are no Product data in local database!");
-                fstream.Close();
-                return false;
-            }
-            foreach (Product prod in prodList) {
-                try {
-                    XElement p = (from prodRec in prodDB.Elements()
-                                  where (string)prodRec.Attribute("Name") == prod.Name
-                                  select prodRec).Single();
-                    prod.IsUploaded = bool.Parse(p.Attribute("IsUploaded").Value);
-                    prod.CupsuleMult = Convert.ToInt32(p.Attribute("Cmult").Value);
-                    prod.MachMult = Convert.ToInt32(p.Attribute("Mmult").Value);
-                }
-                catch {}
-            }
-            fstream.Close();
-            return false;
-            
-        }
-        public void SaveCustomerData(List<Customer> custList) {
-            string filename = Path.Combine(appPath, "LocalBase.xml");
-            FileStream fstream = null;
-            XDocument db = null;
-            bool isDBExist = true;
-            try { fstream = new FileStream(filename, FileMode.Open); }
-            catch {
-                isDBExist = false;
-                fstream = new FileStream(filename, FileMode.CreateNew);
-            }
-            if (isDBExist) { db = XDocument.Load(fstream); }
-            else { 
-                db = new XDocument();
-                db.Add(new XElement("Database"));
-            }
-            XElement prodDB = db.Root.Element("Customers");
-            if (prodDB == null) {
-                db.Root.Add(new XElement("Customers"));
-                prodDB = db.Root.Element("Customers");
-            }
-            foreach (Customer cust in custList) {
-                XElement c = null;
-                if (prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == cust.Name; }).Any()) {
-                    try {
-                        c = prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == cust.Name; }).Single();
-                    }
-                    catch {
-                        c = prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == cust.Name; }).First();
-                        foreach (XElement dub in prodDB.Elements().Where((e) => { return (string)e.Attribute("Name") == cust.Name; })) {
-                            if (dub == c) continue;
-                            dub.Remove();
-                        }
-                    }
-                    c.Attribute("AltName").SetValue(cust.altName);
-                    c.Attribute("IsUploaded").SetValue(cust.IsUploaded);
-                    c.Attribute("City").SetValue(cust.City);
-                    c.Attribute("Region").SetValue(cust.Region);
-                }
-                else { 
-                    c = new XElement("Customer");
-                    c.Add(new XAttribute("Name", cust.Name));
-                    c.Add(new XAttribute("AltName", cust.altName));
-                    c.Add(new XAttribute("IsUploaded", cust.IsUploaded));
-                    c.Add(new XAttribute("City", cust.City));
-                    c.Add(new XAttribute("Region", cust.Region));
-                    prodDB.Add(c);
-                }
-            }
-            fstream.Seek(0, SeekOrigin.Begin);
-            db.Save(fstream);
-            fstream.Close();
-        }
-        public bool LoadCustomerData(ref List<Customer> custList) {
-            string filename = Path.Combine(appPath, "LocalBase.xml");
-            FileStream fstream = null;
-            try {
-                fstream = new FileStream(filename, FileMode.Open);
-            }
-            catch (FileNotFoundException) {
-                MessageBox.Show("Error: Local database file not found!");
-                return true;
-            }
-            if (fstream.CanRead == false) {
-                MessageBox.Show("Database file " + filename + " cannot be read!");
-                fstream.Close();
-                return true;
-            }
-            XDocument doc = XDocument.Load(fstream);
-            XElement custDB = doc.Root.Element("Customers");
-            if (custDB == null) {
-                MessageBox.Show("There are no Customer data in local database!");
-                fstream.Close();
-                return false;
-            }
-            if (custDB.IsEmpty) {
-                MessageBox.Show("There are no Customer data in local database!");
-                fstream.Close();
-                return false;
-            }
-            foreach (Customer cust in custList) {
-                try {
-                    XElement c = (from custRec in custDB.Elements()
-                                  where (string)custRec.Attribute("Name") == cust.Name
-                                  select custRec).Single();
-                    cust.IsUploaded = bool.Parse(c.Attribute("IsUploaded").Value);
-                    cust.altName = c.Attribute("AltName").Value;
-                    cust.City = c.Attribute("City").Value;
-                    cust.Region = c.Attribute("Region").Value;
-                }
-                catch { }
-            }
-            fstream.Close();
-            return false;
         }
         private static Dictionary<String, CellEntry> GetCellEntryMap(SpreadsheetsService service, CellFeed cellFeed, List<CellAddress> cellAddrs) {
             CellFeed batchRequest = new CellFeed(new Uri(cellFeed.Self), service);

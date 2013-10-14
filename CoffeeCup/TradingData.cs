@@ -300,6 +300,8 @@ namespace CoffeeCup
     public class LocalDatabase {
         XElement productDatabase;
         XElement customerDatabase;
+        XDocument database;
+        string pathToFile;
         public Dictionary<string, Customer> Customers { get; private set; }
         public Dictionary<string, Product> Products { get; private set; }
         public void UpdateDatabase(List<Customer> customerList ) {
@@ -309,6 +311,7 @@ namespace CoffeeCup
                 }
                 else AddNewEntry(customer);
             }
+
         }
         public void UpdateDatabase(List<Product> productList) {
             foreach (Product product in productList) {
@@ -316,9 +319,22 @@ namespace CoffeeCup
                 else AddNewEntry(product);
             }
         }
+        public void SyncToDrive() {
+            FileStream fstream = null;
+            fstream = new FileStream(pathToFile, FileMode.Create);
+            database.Save(fstream);
+            fstream.Close();
+        }
         void UpdateEntryValue(Customer customer){
             Customers[customer.Name] = customer;
-            XElement dCustomer = customerDatabase.Elements().Where((c) => c.Attribute("Name").Value == customer.Name).Single();
+            XElement dCustomer;
+            try { 
+                dCustomer = customerDatabase.Elements().Where((c) => c.Attribute("Name").Value == customer.Name).Single(); 
+            }
+            catch {
+                FixDatabase();
+                dCustomer = customerDatabase.Elements().Where((c) => c.Attribute("Name").Value == customer.Name).Single();
+            }
             dCustomer.Attribute("AltName").SetValue(customer.altName);
             dCustomer.Attribute("City").SetValue(customer.City);
             dCustomer.Attribute("Region").SetValue(customer.Region);
@@ -326,7 +342,14 @@ namespace CoffeeCup
         }
         void UpdateEntryValue(Product product) {
             Products[product.Name] = product;
-            XElement dProduct = productDatabase.Elements().Where((p) => p.Attribute("Name").Value == product.Name).Single();
+            XElement dProduct;
+            try {
+                dProduct = productDatabase.Elements().Where((p) => p.Attribute("Name").Value == product.Name).Single();
+            }
+            catch {
+                FixDatabase();
+                dProduct = productDatabase.Elements().Where((p) => p.Attribute("Name").Value == product.Name).Single();
+            }
             dProduct.Attribute("IsUploaded").SetValue(product.IsUploaded);
             dProduct.Attribute("Cmult").SetValue(product.CupsuleMult);
             dProduct.Attribute("Mmult").SetValue(product.MachMult);
@@ -350,23 +373,38 @@ namespace CoffeeCup
             dProduct.Add(new XAttribute("Cmult", product.CupsuleMult));
             productDatabase.Add(dProduct);
         }
+        void FixDatabase() {
+            foreach (XElement product in productDatabase.Elements()) {
+                foreach (XElement dub in productDatabase.Elements().Where((p) => (string)p.Attribute("Name") == product.Name)) {
+                    if (product == dub) continue;
+                    else dub.Remove();
+                }
+            }
+            foreach (XElement customer in customerDatabase.Elements()) {
+                foreach (XElement dub in customerDatabase.Elements().Where((c) => (string)c.Attribute("Name") == customer.Name)) {
+                    if (customer == dub) continue;
+                    else dub.Remove();
+                }
+            }
+        }
         private LocalDatabase() { }
         public LocalDatabase(string databasePath) {
+            pathToFile = databasePath;
             FileStream fstream = null;
             fstream = new FileStream(databasePath, FileMode.OpenOrCreate);
-            XDocument db = XDocument.Load(fstream);
-            if (db.Root == null) {
-                db.Add(new XElement("Database"));
+            database = XDocument.Load(fstream);
+            if (database.Root == null) {
+                database.Add(new XElement("Database"));
             }
-            productDatabase = db.Root.Element("Products");
+            productDatabase = database.Root.Element("Products");
             if (productDatabase == null) {
-                db.Root.Add(new XElement("Products"));
-                productDatabase = db.Root.Element("Products");
+                database.Root.Add(new XElement("Products"));
+                productDatabase = database.Root.Element("Products");
             }
-            customerDatabase = db.Root.Element("Customers");
+            customerDatabase = database.Root.Element("Customers");
             if (customerDatabase == null) {
-                db.Root.Add(new XElement("Customers"));
-                customerDatabase = db.Root.Element("Customers");
+                database.Root.Add(new XElement("Customers"));
+                customerDatabase = database.Root.Element("Customers");
             }
             foreach (XElement product in productDatabase.Elements()) {
                 Product tProduct = new Product(product.Attribute("Name").Value);
