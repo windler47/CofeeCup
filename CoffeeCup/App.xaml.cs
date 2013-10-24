@@ -25,8 +25,6 @@ namespace CoffeeCup {
         OAuth2Parameters parameters;
         SpreadsheetsService GSpreadsheetService;
         CCupWSFeed worksheetsFeed;
-        public string docUri; //Document key
-        public string docPath; //Document Path
         public XElement xmlDoc;
         public Dictionary<uint, List<Realization>> realizations;
         public string appPath;
@@ -39,44 +37,51 @@ namespace CoffeeCup {
             GOAuth2RequestFactory GRequestFactory = new GOAuth2RequestFactory(null, "CoffeeCup", parameters);
             GSpreadsheetService.RequestFactory = GRequestFactory;
         }
-        public bool WorksheetFeedInit() {
+        public bool WorksheetFeedInit(string spredsheetName) {
             // Instantiate a SpreadsheetQuery object to retrieve spreadsheets.
             SpreadsheetQuery query = new SpreadsheetQuery();
+            SpreadsheetFeed feed = null;
             // Make a request to the API and get all spreadsheets.
-            SpreadsheetFeed feed = GSpreadsheetService.Query(query);
+            try {
+                 feed = GSpreadsheetService.Query(query);
+            }
+            catch (Exception e){
+                MessageBox.Show(e.Message);
+                return true;
+            }
             if (feed.Entries.Count == 0) {
                 MessageBox.Show("No documents found :(");
                 return true;
             }
             SpreadsheetEntry spreadsheet = null;
             foreach (AtomEntry spr in feed.Entries) {
-                if (((SpreadsheetEntry)spr).Title.Text == docUri) {
+                if (((SpreadsheetEntry)spr).Title.Text == spredsheetName) {
                     spreadsheet = (SpreadsheetEntry)spr;
                     break;
                 }
             }
             if (spreadsheet == null) {
-                MessageBox.Show("No documents found :(");
+                MessageBox.Show("Документ с таким названием не найден сриди доступных.");
                 return true;
             }
             worksheetsFeed = new CCupWSFeed(spreadsheet.Worksheets, GSpreadsheetService);
             return false;
         }
-        public bool InitializexmlDoc() {
+        public bool InitializexmlDoc(string documentPath) {
             bool result = false;
             try {
-                xmlDoc = XElement.Load(docPath);
+                xmlDoc = XElement.Load(documentPath);
             }
             catch (ArgumentNullException) {
                 MessageBox.Show("Не указан путь к файлу с данными для выгрузки");
                 result = true;
             }
             catch (SecurityException) {
-                MessageBox.Show("Недостаточно прав для обращения к файлу " + docPath);
+                MessageBox.Show("Недостаточно прав для обращения к файлу по адресу " + documentPath);
                 result = true;
             }
             catch (FileNotFoundException) {
-                MessageBox.Show("Файл " + docPath + "не найден.");
+                MessageBox.Show("Файл " + documentPath + "не найден.");
                 result = true;
             }
             return result;
@@ -273,117 +278,18 @@ namespace CoffeeCup {
         //    }
         //    return false;
         //}
-        bool UploadData(List<Realization> yRealizations, CCupWSEntry worksheet) {
-            CellQuery cellQuery = new CellQuery(worksheet.CellFeedLink);
-            CellFeed cellFeed = GSpreadsheetService.Query(cellQuery);
-            CellSameAddress CellEqC = new CellSameAddress();
-            Dictionary<CellAddress, string> Address_Value = new Dictionary<CellAddress, string>(CellEqC);
-            Dictionary<string, CellEntry> Address_Cell;
-            foreach (Realization doc in yRealizations) {
-                bool contains_cofee = false;
-                foreach (SellingPosition rec in doc.SellingPositions){
-                    if (rec.Product.IsUploaded) contains_cofee = true;
-                }
-                if (!doc.Buyer.IsUploaded || !contains_cofee) continue;
-                uint docColOffset = 3 + 6 * ((uint)doc.Date.Month-1);
-                uint docRow = 0;
-                if (worksheet.cust_Row.ContainsKey(doc.Buyer.altName)) docRow = worksheet.cust_Row[doc.Buyer.altName];
-                else if (worksheet.cust_Row.ContainsKey(doc.Buyer.Name)) docRow = worksheet.cust_Row[doc.Buyer.Name];
-                else {
-                    docRow = worksheet.AddNewCustomerRow(doc.Buyer);
-                }
-                #region Filling Address_Value dictionary
-                foreach (SellingPosition rec in doc.SellingPositions) {
-                    if (!rec.Product.IsUploaded) continue;
-                    CellAddress cupNumAddress = new CellAddress(docRow, docColOffset + 1);
-                    CellAddress machNumAddress = new CellAddress(docRow, docColOffset + 2);
-                    CellAddress cupSumAddress = new CellAddress(docRow, docColOffset + 5);
-                    CellAddress machSumAddress = new CellAddress(docRow, docColOffset + 6);
-                    if (rec.Product.MachMult == 0) //This is capsules!
-                    {
-                        string cupNumstr = (rec.Amount * rec.Product.CupsuleMult).ToString();
-                        string cupSumstr = (rec.Price).ToString();
-                        string leadingstr;
-                        if (Address_Value.ContainsKey(cupNumAddress)) {
-                            leadingstr = "+";
-                            Address_Value[cupNumAddress] += (leadingstr + cupNumstr);
-                            if (Address_Value.ContainsKey(cupSumAddress)) Address_Value[cupSumAddress] += (leadingstr + cupSumstr);
-                            else Address_Value[cupSumAddress] = (leadingstr + cupSumstr);
-                        }
-                        else {
-                            leadingstr = string.Empty;
-                            Address_Value[cupNumAddress] = (leadingstr + cupNumstr);
-                            Address_Value[cupSumAddress] = (leadingstr + cupSumstr);
-                        }
-
-                    }
-                    else //This is CoffeeMachine or Set 
-                    {
-                        string machNumstr = (rec.Amount * rec.Product.MachMult).ToString();
-                        string machSumstr = (rec.Price).ToString();
-                        string leadingstr;
-                        if (Address_Value.ContainsKey(machNumAddress)) {
-                            leadingstr = "+";
-                            Address_Value[machNumAddress] += (leadingstr + machNumstr);
-                            Address_Value[machSumAddress] += (leadingstr + machSumstr);
-                        }
-                        else {
-                            leadingstr = string.Empty;
-                            Address_Value[machNumAddress] = (leadingstr + machNumstr);
-                            Address_Value[machSumAddress] = (leadingstr + machSumstr);
-                        }
-                        if (rec.Product.CupsuleMult != 0) {
-                            string cupNumstr = (rec.Amount * rec.Product.CupsuleMult).ToString();
-                            if (Address_Value.ContainsKey(cupNumAddress)) {
-                                leadingstr = "+";
-                                Address_Value[cupNumAddress] += (leadingstr + cupNumstr);
-                            }
-                            else {
-                                leadingstr = string.Empty;
-                                Address_Value[cupNumAddress] = (leadingstr + cupNumstr);
-                            }
-                        }
-
-                    }
-                }
-                #endregion
-            }
-            Address_Cell = GetCellEntryMap(GSpreadsheetService, cellFeed, Address_Value.Keys.ToList());
-            CellFeed batchRequest = new CellFeed(cellQuery.Uri, GSpreadsheetService);
-            foreach (CellAddress cellID in Address_Value.Keys) {
-                CellEntry batchEntry = Address_Cell[cellID.IdString];
-                if (batchEntry.InputValue == "") {
-                    batchEntry.InputValue = "=" + Address_Value[cellID];
-                }
-                else {
-                    batchEntry.InputValue += "+" + Address_Value[cellID];
-                }
-                batchEntry.BatchData = new GDataBatchEntryData(cellID.IdString, GDataBatchOperationType.update);
-                batchRequest.Entries.Add(batchEntry);
-            }
-            // Submit the update
-            CellFeed batchResponse = (CellFeed)GSpreadsheetService.Batch(batchRequest, new Uri(cellFeed.Batch));
-            // Check the results
-            bool isSuccess = true;
-            foreach (CellEntry entry in batchResponse.Entries) {
-                string batchId = entry.BatchData.Id;
-                if (entry.BatchData.Status.Code != 200) {
-                    isSuccess = false;
-                    GDataBatchStatus status = entry.BatchData.Status;
-                    MessageBox.Show(string.Format("{0} failed ({1})", batchId, status.Reason));
-                }
-            }
-            return isSuccess;
-        }
+        
         public bool UploadData() {
             bool success = true;
             Dictionary<uint,CCupWSEntry> year_ws = new Dictionary<uint,CCupWSEntry>();
             foreach (CCupWSEntry worksheet in worksheetsFeed.EntriesList){
-                year_ws.Add(worksheet.worksheetYear,worksheet);
+                if (!year_ws.ContainsKey(worksheet.worksheetYear) && worksheet.worksheetYear != 0) {
+                    year_ws.Add(worksheet.worksheetYear, worksheet);
+                }               
             }
             foreach (uint year in realizations.Keys) {
                 if (year_ws.ContainsKey(year)){
-                    success = success && UploadData(realizations[year], year_ws[year]);
+                    success = success && year_ws[year].UploadData(realizations[year]);
                 }
                 else {
                     MessageBox.Show(string.Format("Лист для выгрузки документов за {0} год не найден. Данные за этот год не будут выгружены!",year));
@@ -402,8 +308,10 @@ namespace CoffeeCup {
             }
             BinaryReader br = new BinaryReader(fs);
             parameters.RefreshToken = br.ReadString();
-            OAuthUtil.RefreshAccessToken(parameters);
             fs.Close();
+            OAuthUtil.RefreshAccessToken(parameters);
+            GOAuth2RequestFactory GRequestFactory = new GOAuth2RequestFactory(null, "CoffeeCup", parameters);
+            GSpreadsheetService.RequestFactory = GRequestFactory;
             return parameters.AccessToken == null;
         }
         public void GracefulShutdown() {
@@ -425,23 +333,6 @@ namespace CoffeeCup {
             BinaryWriter bw = new BinaryWriter(fs);
             bw.Write(refreshToken);
             fs.Close();
-        }
-        private static Dictionary<String, CellEntry> GetCellEntryMap(SpreadsheetsService service, CellFeed cellFeed, List<CellAddress> cellAddrs) {
-            CellFeed batchRequest = new CellFeed(new Uri(cellFeed.Self), service);
-            foreach (CellAddress cellId in cellAddrs) {
-                CellEntry batchEntry = new CellEntry(cellId.Row, cellId.Col, cellId.IdString);
-                batchEntry.Id = new AtomId(string.Format("{0}/{1}", cellFeed.Self, cellId.IdString));
-                batchEntry.BatchData = new GDataBatchEntryData(cellId.IdString, GDataBatchOperationType.query);
-                batchRequest.Entries.Add(batchEntry);
-            }
-
-            CellFeed queryBatchResponse = (CellFeed)service.Batch(batchRequest, new Uri(cellFeed.Batch));
-
-            Dictionary<String, CellEntry> cellEntryMap = new Dictionary<String, CellEntry>();
-            foreach (CellEntry entry in queryBatchResponse.Entries) {
-                cellEntryMap.Add(entry.BatchData.Id, entry);
-            }
-            return cellEntryMap;
         }
     }
 }

@@ -11,18 +11,30 @@ namespace CoffeeCup
     public partial class AuthWindow : Window
     {
         CoffeeCup.App app = (CoffeeCup.App)CoffeeCup.App.Current;
-        public AuthWindow()
+        string documentName;
+        public AuthWindow(string gDocName)
         {
             InitializeComponent();
             string authlink = app.GAuthGetLink();
             AuthUrl.NavigateUri = new Uri(authlink);
             textAuthUrl.Text = authlink;
+            documentName = gDocName;
         }
         private void AuthOKClick(object sender, RoutedEventArgs e)
         {
             app.GAuthStep2(GAccessCode.Text);
-            DataPicker tDataPicker = new DataPicker();
-            tDataPicker.Show();
+            try {
+                DataPicker tDataPicker = new DataPicker(documentName);
+                tDataPicker.Show();
+            }
+            catch (System.ApplicationException) {
+                MessageBoxButton button = MessageBoxButton.YesNo;
+                MessageBoxImage icon = MessageBoxImage.Question;
+                string caption = "Ошибка!";
+                string messageBoxText = "Ошибка обращения к Google документу. Нажмите Yes чтобы проигнорировать и попробовать еще раз, No чтобы закрыть приложение.";
+                MessageBoxResult result = MessageBox.Show(messageBoxText, caption, button, icon);
+                if (result == MessageBoxResult.No) app.GracefulShutdown();
+            }
             this.Close();
         }
         private void AppExit(object sender, RoutedEventArgs e) {

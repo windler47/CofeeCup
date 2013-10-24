@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.IO;
 
 namespace CoffeeCup
 {
@@ -15,15 +16,8 @@ namespace CoffeeCup
         LocalDatabase db;
         List<Customer> custList = new List<Customer>();
         List<Product> prodList = new List<Product>();
-        public DataPicker()
+        public DataPicker(string documentUrl)
         {
-            InitializeComponent();
-            if (app.InitializexmlDoc()){ 
-                MessageBox.Show("Произошла ошибка при открытии файла с данными");
-                MainWindow tmainWindow = new MainWindow(app.docUri, app.docPath);
-                tmainWindow.Show();
-                this.Close();
-            }
             Dictionary<int, Product> ProductsDic = app.GetGoods();
             Dictionary<int, Customer> CustomersDic = app.GetCustomers();
             app.GetRealisations(CustomersDic, ProductsDic);
@@ -37,13 +31,9 @@ namespace CoffeeCup
                     }
                 }
             }
-            if (app.WorksheetFeedInit()) {
-                MessageBox.Show("Произошла ошибка при попытке обращения к Google документу");
-                MainWindow tmainWindow = new MainWindow(app.docUri, app.docPath);
-                tmainWindow.Show();
-                this.Close();
-            }
-            db = new LocalDatabase(app.appPath);
+            db = new LocalDatabase(Path.Combine(app.appPath, "LocalBase.xml"));
+            if (app.WorksheetFeedInit(documentUrl)) throw new System.ApplicationException("Ошибка обращения к Google документу.");
+            InitializeComponent();
             CustomersDataGrid.DataContext = custList;
             ProductsDataGrid.DataContext = prodList;
         }    

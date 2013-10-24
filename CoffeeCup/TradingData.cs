@@ -6,6 +6,9 @@ using Google.GData.Spreadsheets;
 using System.Linq;
 using System.IO;
 using System.Xml.Linq;
+using System.Windows;
+using System.Security.Permissions;
+using System.Security;
 
 
 namespace CoffeeCup
@@ -170,54 +173,202 @@ namespace CoffeeCup
 	}
 
 }
-    public class CCupWSEntry : WorksheetEntry, IComparable<CCupWSEntry> {
-        public Dictionary<uint,string> AddNewCustomerRow(List<Customer> newCustomers){
-            Dictionary<uint,string> resultDic = new Dictionary<uint,string>();
+    public class CCupWSEntry : IComparable<CCupWSEntry> {
+        public void AddNewCustomerRow(List<Customer> newCustomers){
             // Define the URL to request the list feed of the worksheet.
-            AtomLink listFeedLink = Links.FindService(GDataSpreadsheetsNameTable.ListRel, null);
+            AtomLink listFeedLink = iWorksheetEntry.Links.FindService(GDataSpreadsheetsNameTable.ListRel, null);
             // Fetch the list feed of the worksheet.
             ListQuery listQuery = new ListQuery(listFeedLink.HRef.ToString());
             ListFeed listFeed = spreadsheetService.Query(listQuery);
-            ListEntry example = (ListEntry)listFeed.Entries[3];
+            ListEntry example = (ListEntry)listFeed.Entries[0];
             ListEntry total = (ListEntry)listFeed.Entries.Last();
             uint linenumber = (uint)listFeed.TotalResults;
             total.Delete();
             foreach (Customer customer in newCustomers) {
+                if (cust_Row.ContainsKey(customer.Name) || cust_Row.ContainsKey(customer.altName)) {
+                    continue;
+                }
                 spreadsheetService.Insert(listFeed, GenerateCustomerRow(customer,example));
-                resultDic.Add(++linenumber,customer.Name);
                 if (string.IsNullOrWhiteSpace(customer.altName)) {
-                    cust_Row.Add(customer.altName, linenumber);
+                    cust_Row.Add(customer.Name, ++linenumber);
                 }
                 else {
-                    cust_Row.Add(customer.Name, linenumber);
+                    cust_Row.Add(customer.altName, ++linenumber);
                 }
             }
             spreadsheetService.Insert(listFeed, total);
-            return resultDic;
         }
         public uint AddNewCustomerRow(Customer newCustomer){
             // Define the URL to request the list feed of the worksheet.
-            AtomLink listFeedLink = Links.FindService(GDataSpreadsheetsNameTable.ListRel, null);
+            AtomLink listFeedLink = iWorksheetEntry.Links.FindService(GDataSpreadsheetsNameTable.ListRel, null);
             // Fetch the list feed of the worksheet.
             ListQuery listQuery = new ListQuery(listFeedLink.HRef.ToString());
             ListFeed listFeed = spreadsheetService.Query(listQuery);
-            ListEntry example = (ListEntry)listFeed.Entries[3];
+            ListEntry example = (ListEntry)listFeed.Entries[0];
             ListEntry total = (ListEntry)listFeed.Entries.Last();
             uint linenumber = (uint)listFeed.TotalResults;
             total.Delete();
             spreadsheetService.Insert(listFeed, GenerateCustomerRow(newCustomer,example));
             spreadsheetService.Insert(listFeed, total);
             if (string.IsNullOrWhiteSpace(newCustomer.altName)) {
-                cust_Row.Add(newCustomer.altName, ++linenumber);
+                cust_Row.Add(newCustomer.Name, ++linenumber);
             }
             else {
-                cust_Row.Add(newCustomer.Name, ++linenumber);
+                cust_Row.Add(newCustomer.altName, ++linenumber);
             }
             return linenumber;
         }
+        public Dictionary<string, uint> cust_Row;
+        public uint worksheetYear;
+        public bool UploadData(List<Realization> yRealizations) {
+            CellQuery cellQuery = new CellQuery(iWorksheetEntry.CellFeedLink);
+            CellFeed cellFeed = spreadsheetService.Query(cellQuery);
+            CellSameAddress CellEqC = new CellSameAddress();
+            Dictionary<CellAddress, string> Address_Value = new Dictionary<CellAddress, string>(CellEqC);
+            Dictionary<string, CellEntry> Address_Cell;
+            List<Customer> newCustomers = new List<Customer>();
+            List<Realization> RemRealizations = new List<Realization>();
+            List<SellingPosition> RemSP = new List<SellingPosition>();
+            foreach (Realization doc in yRealizations) {
+                if (!doc.Buyer.IsUploaded) {
+                    RemRealizations.Add(doc);
+                    continue;
+                }
+                foreach (SellingPosition rec in doc.SellingPositions) {
+                    if (!rec.Product.IsUploaded) RemSP.Add(rec);
+                }
+                if (RemSP.Count!=0) {
+                    foreach (SellingPosition sp in RemSP) {
+                        doc.SellingPositions.Remove(sp);
+                    }
+                    if (doc.SellingPositions.Count == 0) {
+                        RemRealizations.Add(doc);
+                        continue;
+                    }
+                }
+                if (cust_Row.ContainsKey(doc.Buyer.altName) || cust_Row.ContainsKey(doc.Buyer.altName)) {
+                    continue;
+                }
+                else {
+                    newCustomers.Add(doc.Buyer);
+                }
+            }
+            foreach (Realization r in RemRealizations) {
+                yRealizations.Remove(r);
+            }
+            if (newCustomers.Count != 0) {
+                AddNewCustomerRow(newCustomers);
+            }
+            foreach (Realization doc in yRealizations) {
+                uint docColOffset = 3 + 6 * ((uint)doc.Date.Month - 1);
+                uint docRow = 0;
+                if (cust_Row.ContainsKey(doc.Buyer.altName)) docRow = cust_Row[doc.Buyer.altName];
+                else if (cust_Row.ContainsKey(doc.Buyer.Name)) docRow = cust_Row[doc.Buyer.Name];
+                else {
+                    docRow = AddNewCustomerRow(doc.Buyer);
+                }
+                #region Filling Address_Value dictionary
+                foreach (SellingPosition rec in doc.SellingPositions) {
+                    if (!rec.Product.IsUploaded) continue;
+                    CellAddress cupNumAddress = new CellAddress(docRow, docColOffset + 1);
+                    CellAddress machNumAddress = new CellAddress(docRow, docColOffset + 2);
+                    CellAddress cupSumAddress = new CellAddress(docRow, docColOffset + 5);
+                    CellAddress machSumAddress = new CellAddress(docRow, docColOffset + 6);
+                    if (rec.Product.MachMult == 0) //This is capsules!
+                    {
+                        string cupNumstr = (rec.Amount * rec.Product.CupsuleMult).ToString();
+                        string cupSumstr = (rec.Price).ToString();
+                        string leadingstr;
+                        if (Address_Value.ContainsKey(cupNumAddress)) {
+                            leadingstr = "+";
+                            Address_Value[cupNumAddress] += (leadingstr + cupNumstr);
+                            if (Address_Value.ContainsKey(cupSumAddress)) Address_Value[cupSumAddress] += (leadingstr + cupSumstr);
+                            else Address_Value[cupSumAddress] = (leadingstr + cupSumstr);
+                        }
+                        else {
+                            leadingstr = string.Empty;
+                            Address_Value[cupNumAddress] = (leadingstr + cupNumstr);
+                            Address_Value[cupSumAddress] = (leadingstr + cupSumstr);
+                        }
+                    }
+                    else //This is CoffeeMachine or Set 
+                    {
+                        string machNumstr = (rec.Amount * rec.Product.MachMult).ToString();
+                        string machSumstr = (rec.Price).ToString();
+                        string leadingstr;
+                        if (Address_Value.ContainsKey(machNumAddress)) {
+                            leadingstr = "+";
+                            Address_Value[machNumAddress] += (leadingstr + machNumstr);
+                            Address_Value[machSumAddress] += (leadingstr + machSumstr);
+                        }
+                        else {
+                            leadingstr = string.Empty;
+                            Address_Value[machNumAddress] = (leadingstr + machNumstr);
+                            Address_Value[machSumAddress] = (leadingstr + machSumstr);
+                        }
+                        if (rec.Product.CupsuleMult != 0) {
+                            string cupNumstr = (rec.Amount * rec.Product.CupsuleMult).ToString();
+                            if (Address_Value.ContainsKey(cupNumAddress)) {
+                                leadingstr = "+";
+                                Address_Value[cupNumAddress] += (leadingstr + cupNumstr);
+                            }
+                            else {
+                                leadingstr = string.Empty;
+                                Address_Value[cupNumAddress] = (leadingstr + cupNumstr);
+                            }
+                        }
+                    }
+                }
+                #endregion
+            }
+            Address_Cell = GetCellEntryMap(cellFeed, Address_Value.Keys.ToList());
+            CellFeed batchRequest = new CellFeed(cellQuery.Uri, spreadsheetService);
+            foreach (CellAddress cellID in Address_Value.Keys) {
+                CellEntry batchEntry = Address_Cell[cellID.IdString];
+                if (batchEntry.InputValue == "") {
+                    batchEntry.InputValue = "=" + Address_Value[cellID];
+                }
+                else {
+                    batchEntry.InputValue += "+" + Address_Value[cellID];
+                }
+                batchEntry.BatchData = new GDataBatchEntryData(cellID.IdString, GDataBatchOperationType.update);
+                batchRequest.Entries.Add(batchEntry);
+            }
+            // Submit the update
+            CellFeed batchResponse = (CellFeed)spreadsheetService.Batch(batchRequest, new Uri(cellFeed.Batch));
+            // Check the results
+            bool isSuccess = true;
+            foreach (CellEntry entry in batchResponse.Entries) {
+                string batchId = entry.BatchData.Id;
+                if (entry.BatchData.Status.Code != 200) {
+                    isSuccess = false;
+                    GDataBatchStatus status = entry.BatchData.Status;
+                    MessageBox.Show(string.Format("{0} failed ({1})", batchId, status.Reason));
+                }
+            }
+            return isSuccess;
+        }
+        WorksheetEntry iWorksheetEntry;
+        private Dictionary<String, CellEntry> GetCellEntryMap(CellFeed cellFeed, List<CellAddress> cellAddrs) {
+            CellFeed batchRequest = new CellFeed(new Uri(cellFeed.Self), spreadsheetService);
+            foreach (CellAddress cellId in cellAddrs) {
+                CellEntry batchEntry = new CellEntry(cellId.Row, cellId.Col, cellId.IdString);
+                batchEntry.Id = new AtomId(string.Format("{0}/{1}", cellFeed.Self, cellId.IdString));
+                batchEntry.BatchData = new GDataBatchEntryData(cellId.IdString, GDataBatchOperationType.query);
+                batchRequest.Entries.Add(batchEntry);
+            }
+
+            CellFeed queryBatchResponse = (CellFeed)spreadsheetService.Batch(batchRequest, new Uri(cellFeed.Batch));
+
+            Dictionary<String, CellEntry> cellEntryMap = new Dictionary<String, CellEntry>();
+            foreach (CellEntry entry in queryBatchResponse.Entries) {
+                cellEntryMap.Add(entry.BatchData.Id, entry);
+            }
+            return cellEntryMap;
+        }
         ListEntry GenerateCustomerRow(Customer cust, ListEntry example) {
             /// Generate new customer row 
-            string medCup = "=IFERROR(R[0]C[-3]/R[0]C[-1]*120;'Нет данных'";
+            string medCup = "=IFERROR(R[0]C[-3]/R[0]C[-1]*120;\"Нет данных\")";
             string machNum = "=R[0]C[-7]+R[0]C[-6]";
             string cupSum = "=R[0]C[3]";
             string machSum = "=R0C[-6]+R0C[-5]";
@@ -225,9 +376,9 @@ namespace CoffeeCup
             custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[0].LocalName, Value = cust.City});
             custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[1].LocalName, Value = cust.Region });
             if (string.IsNullOrWhiteSpace(cust.altName)) {
-                custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[2].LocalName, Value = cust.altName });
+                custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[2].LocalName, Value = cust.Name });
             }
-            else custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[2].LocalName, Value = cust.Name });            
+            else custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[2].LocalName, Value = cust.altName });            
             custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[6].LocalName, Value = medCup });
             //January - try to get mah data from prev year
             if (worksheetYear!=0) {
@@ -236,14 +387,28 @@ namespace CoffeeCup
                 int maxindex = Array.FindLastIndex(wsList,ws => ws.worksheetYear < worksheetYear);
                 int minindex = Array.FindIndex(wsList, ws => ws.worksheetYear > 0);
                 string janMah = "";
-                for (int i = maxindex; i >= minindex; i--) {
-                    if (wsList[i].cust_Row.ContainsKey(cust.altName)) {
-                        janMah = string.Format("=" + wsList[i].Title.Text + "!R{1}C76", wsList[i].cust_Row[cust.altName]);
-                        break;
-                    }
-                    else if (wsList[i].cust_Row.ContainsKey(cust.Name)) {
-                        janMah = string.Format("=" + wsList[i].Title.Text + "!R{1}C76", wsList[i].cust_Row[cust.Name]);
-                        break;
+                if (maxindex > 0) {
+                    for (int i = maxindex; i >= minindex; i--) {
+                        if (string.IsNullOrWhiteSpace(cust.altName)) {
+                            if (wsList[i].cust_Row.ContainsKey(cust.Name)) {
+                                janMah = string.Format("='" + wsList[i].worksheetYear.ToString() + "'!R{1}C76", wsList[i].cust_Row[cust.Name]);
+                                break;
+                            }
+                            else if (wsList[i].cust_Row.ContainsKey(cust.Name)) {
+                                janMah = string.Format("='" + wsList[i].worksheetYear.ToString() + "'!R{1}C76", wsList[i].cust_Row[cust.Name]);
+                                break;
+                            }
+                        }
+                        else {
+                            if (wsList[i].cust_Row.ContainsKey(cust.altName)) {
+                                janMah = string.Format("='" + wsList[i].worksheetYear.ToString() + "'!R{1}C76", wsList[i].cust_Row[cust.altName]);
+                                break;
+                            }
+                            else if (wsList[i].cust_Row.ContainsKey(cust.Name)) {
+                                janMah = string.Format("='" + wsList[i].worksheetYear.ToString() + "'!R{1}C76", wsList[i].cust_Row[cust.Name]);
+                                break;
+                            }
+                        }
                     }
                 }
                 custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[5].LocalName, Value = janMah });
@@ -259,19 +424,18 @@ namespace CoffeeCup
         }
         SpreadsheetsService spreadsheetService;
         CCupWSFeed worksheetFeed;
-        public Dictionary<string, uint> cust_Row;
-        public uint worksheetYear;
-        public CCupWSEntry(SpreadsheetsService service, CCupWSFeed feed) {
+        public CCupWSEntry(SpreadsheetsService service, CCupWSFeed feed, WorksheetEntry worksheetEntry) {
+            iWorksheetEntry = worksheetEntry;
             spreadsheetService = service;
             worksheetFeed = feed;
-            if (!uint.TryParse(Title.Text, out worksheetYear)) worksheetYear = 0;
+            if (!uint.TryParse(iWorksheetEntry.Title.Text, out worksheetYear)) worksheetYear = 0;
             cust_Row = new Dictionary<string, uint>();
-            if (Rows > 3) {
-                CellQuery cellQuery = new CellQuery(CellFeedLink);
+            if (iWorksheetEntry.Rows > 3) {
+                CellQuery cellQuery = new CellQuery(iWorksheetEntry.CellFeedLink);
                 cellQuery.MinimumRow = 3;
-                cellQuery.MaximumRow = Rows - 1;
-                cellQuery.MinimumColumn = 1;
-                cellQuery.MaximumColumn = 1;
+                cellQuery.MaximumRow = iWorksheetEntry.Rows - 1;
+                cellQuery.MinimumColumn = 3;
+                cellQuery.MaximumColumn = 3;
                 CellFeed cellFeed = spreadsheetService.Query(cellQuery);
                 foreach (CellEntry cell in cellFeed.Entries) {
                     cust_Row.Add(cell.InputValue, cell.Row);
@@ -285,16 +449,16 @@ namespace CoffeeCup
     }
     public class CCupWSFeed {
         public List<CCupWSEntry> EntriesList { get; private set; }
+        WorksheetFeed iWorksheetFeed;
+        SpreadsheetsService iSpreadsheetService;
         public CCupWSFeed(WorksheetFeed worksheetFeed, SpreadsheetsService spreadsheetsService) {
             EntriesList = new List<CCupWSEntry>();
             iWorksheetFeed = worksheetFeed;
             iSpreadsheetService = spreadsheetsService;
             foreach (WorksheetEntry wsEntry in worksheetFeed.Entries) {
-                EntriesList.Add(new CCupWSEntry(iSpreadsheetService, this));
+                EntriesList.Add(new CCupWSEntry(iSpreadsheetService, this, wsEntry));
             }
-        }
-        WorksheetFeed iWorksheetFeed;
-        SpreadsheetsService iSpreadsheetService;
+        }        
         private CCupWSFeed() { }
     }
     public class LocalDatabase {
@@ -390,9 +554,21 @@ namespace CoffeeCup
         private LocalDatabase() { }
         public LocalDatabase(string databasePath) {
             pathToFile = databasePath;
+            FileIOPermission permission = new FileIOPermission(FileIOPermissionAccess.AllAccess, databasePath);
+            try {
+                permission.Demand();
+            }
+            catch (SecurityException s) {
+                MessageBox.Show(s.Message);
+            }
             FileStream fstream = null;
             fstream = new FileStream(databasePath, FileMode.OpenOrCreate);
-            database = XDocument.Load(fstream);
+            try {
+                database = XDocument.Load(fstream);
+            }
+            catch {
+                database = new XDocument();
+            }
             if (database.Root == null) {
                 database.Add(new XElement("Database"));
             }
@@ -406,6 +582,7 @@ namespace CoffeeCup
                 database.Root.Add(new XElement("Customers"));
                 customerDatabase = database.Root.Element("Customers");
             }
+            Products = new Dictionary<string, Product>();
             foreach (XElement product in productDatabase.Elements()) {
                 Product tProduct = new Product(product.Attribute("Name").Value);
                 tProduct.IsUploaded = bool.Parse(product.Attribute("IsUploaded").Value);
@@ -413,6 +590,7 @@ namespace CoffeeCup
                 tProduct.MachMult = Convert.ToInt32(product.Attribute("Mmult").Value);
                 Products.Add(tProduct.Name, tProduct);
             }
+            Customers = new Dictionary<string, Customer>();
             foreach (XElement customer in customerDatabase.Elements()) {
                 Customer tCustomer = new Customer(customer.Attribute("Name").Value);
                 tCustomer.IsUploaded = bool.Parse(customer.Attribute("IsUploaded").Value);
