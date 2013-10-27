@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Security;
+using System.Security.Permissions;
+using System.Windows;
+using System.Xml.Linq;
 using Google.GData.Client;
 using Google.GData.Spreadsheets;
-using System.Linq;
-using System.IO;
-using System.Xml.Linq;
-using System.Windows;
-using System.Security.Permissions;
-using System.Security;
 
 
-namespace CoffeeCup
-{
-    public class Customer : INotifyPropertyChanged
-    {
+namespace CoffeeCup {
+    public class Customer : INotifyPropertyChanged {
         string customerAltName;
         string customerCity;
         string customerRegion;
@@ -26,7 +24,7 @@ namespace CoffeeCup
                     this.customerCity = value;
                     NotifyPropertyChanged("City");
                 }
-            } 
+            }
         }
         public string Region {
             get { return customerRegion; }
@@ -35,7 +33,7 @@ namespace CoffeeCup
                     this.customerRegion = value;
                     NotifyPropertyChanged("Region");
                 }
-            } 
+            }
         }
         public string Name { get; private set; }
         public string altName {
@@ -45,7 +43,7 @@ namespace CoffeeCup
                     this.customerAltName = value;
                     NotifyPropertyChanged("altName");
                 }
-            } 
+            }
         }
         public bool IsUploaded {
             get { return this.customerIsUploaded; }
@@ -54,25 +52,23 @@ namespace CoffeeCup
                     this.customerIsUploaded = value;
                     NotifyPropertyChanged("IsUploaded");
                 }
-            } 
+            }
         }
-        public Customer(string name)
-        {
+        public Customer(string name) {
             Name = name;
             altName = string.Empty;
             City = string.Empty;
             Region = string.Empty;
             IsUploaded = true;
         }
-        public Customer(string name, string city, string region )
-        {
+        public Customer(string name, string city, string region) {
             Name = name;
             altName = string.Empty;
             City = city;
             Region = region;
             IsUploaded = true;
         }
-        
+
         private Customer() { }
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyPropertyChanged(String propertyName = "") {
@@ -81,8 +77,7 @@ namespace CoffeeCup
             }
         }
     }
-    public class Product : INotifyPropertyChanged
-    {
+    public class Product : INotifyPropertyChanged {
         public string Name { get; private set; }
         public int CupsuleMult {
             get { return this.pCupsuleMult; }
@@ -111,8 +106,7 @@ namespace CoffeeCup
                 }
             }
         }
-        public Product(string name)
-        {
+        public Product(string name) {
             Name = name;
             CupsuleMult = 1;
         }
@@ -127,15 +121,13 @@ namespace CoffeeCup
         int pMachMult;
         bool prodIsUploaded;
     }
-    public class SellingPosition
-    {
+    public class SellingPosition {
         public Product Product;
         public int Amount;
         public double Price;
         //public double NDS;
     }
-    public class Realization
-    {
+    public class Realization {
         public Customer Buyer;
         public DateTime Date;
         public List<SellingPosition> SellingPositions;
@@ -153,28 +145,23 @@ namespace CoffeeCup
             this.IdString = string.Format("R{0}C{1}", row, col);
         }
     }
-    class CellSameAddress : EqualityComparer<CellAddress>
-{
-        public override bool Equals(CellAddress c1, CellAddress c2)
-	{
-		if (c1.Col == c2.Col && c1.Row == c2.Row)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-        public override int GetHashCode(CellAddress c)
-	{
-        int hCode = Convert.ToInt32(c.Col.ToString() + c.Row.ToString());
-		return hCode.GetHashCode();
-	}
+    class CellSameAddress : EqualityComparer<CellAddress> {
+        public override bool Equals(CellAddress c1, CellAddress c2) {
+            if (c1.Col == c2.Col && c1.Row == c2.Row) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        public override int GetHashCode(CellAddress c) {
+            int hCode = Convert.ToInt32(c.Col.ToString() + c.Row.ToString());
+            return hCode.GetHashCode();
+        }
 
-}
+    }
     public class CCupWSEntry : IComparable<CCupWSEntry> {
-        public void AddNewCustomerRow(List<Customer> newCustomers){
+        public void AddNewCustomerRow(List<Customer> newCustomers) {
             // Define the URL to request the list feed of the worksheet.
             AtomLink listFeedLink = iWorksheetEntry.Links.FindService(GDataSpreadsheetsNameTable.ListRel, null);
             // Fetch the list feed of the worksheet.
@@ -188,7 +175,7 @@ namespace CoffeeCup
                 if (cust_Row.ContainsKey(customer.Name) || cust_Row.ContainsKey(customer.altName)) {
                     continue;
                 }
-                spreadsheetService.Insert(listFeed, GenerateCustomerRow(customer,example));
+                spreadsheetService.Insert(listFeed, GenerateCustomerRow(customer, example));
                 if (string.IsNullOrWhiteSpace(customer.altName)) {
                     cust_Row.Add(customer.Name, ++linenumber);
                 }
@@ -198,7 +185,7 @@ namespace CoffeeCup
             }
             spreadsheetService.Insert(listFeed, total);
         }
-        public uint AddNewCustomerRow(Customer newCustomer){
+        public uint AddNewCustomerRow(Customer newCustomer) {
             // Define the URL to request the list feed of the worksheet.
             AtomLink listFeedLink = iWorksheetEntry.Links.FindService(GDataSpreadsheetsNameTable.ListRel, null);
             // Fetch the list feed of the worksheet.
@@ -208,7 +195,7 @@ namespace CoffeeCup
             ListEntry total = (ListEntry)listFeed.Entries.Last();
             uint linenumber = (uint)listFeed.TotalResults;
             total.Delete();
-            spreadsheetService.Insert(listFeed, GenerateCustomerRow(newCustomer,example));
+            spreadsheetService.Insert(listFeed, GenerateCustomerRow(newCustomer, example));
             spreadsheetService.Insert(listFeed, total);
             if (string.IsNullOrWhiteSpace(newCustomer.altName)) {
                 cust_Row.Add(newCustomer.Name, ++linenumber);
@@ -237,7 +224,7 @@ namespace CoffeeCup
                 foreach (SellingPosition rec in doc.SellingPositions) {
                     if (!rec.Product.IsUploaded) RemSP.Add(rec);
                 }
-                if (RemSP.Count!=0) {
+                if (RemSP.Count != 0) {
                     foreach (SellingPosition sp in RemSP) {
                         doc.SellingPositions.Remove(sp);
                     }
@@ -373,18 +360,18 @@ namespace CoffeeCup
             string cupSum = "=R[0]C[3]";
             string machSum = "=R0C[-6]+R0C[-5]";
             ListEntry custRow = new ListEntry();
-            custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[0].LocalName, Value = cust.City});
+            custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[0].LocalName, Value = cust.City });
             custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[1].LocalName, Value = cust.Region });
             if (string.IsNullOrWhiteSpace(cust.altName)) {
                 custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[2].LocalName, Value = cust.Name });
             }
-            else custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[2].LocalName, Value = cust.altName });            
+            else custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[2].LocalName, Value = cust.altName });
             custRow.Elements.Add(new ListEntry.Custom() { LocalName = example.Elements[6].LocalName, Value = medCup });
             //January - try to get mah data from prev year
-            if (worksheetYear!=0) {
-                CCupWSEntry[] wsList= worksheetFeed.EntriesList.ToArray();
+            if (worksheetYear != 0) {
+                CCupWSEntry[] wsList = worksheetFeed.EntriesList.ToArray();
                 Array.Sort(wsList);
-                int maxindex = Array.FindLastIndex(wsList,ws => ws.worksheetYear < worksheetYear);
+                int maxindex = Array.FindLastIndex(wsList, ws => ws.worksheetYear < worksheetYear);
                 int minindex = Array.FindIndex(wsList, ws => ws.worksheetYear > 0);
                 string janMah = "";
                 if (maxindex > 0) {
@@ -440,7 +427,7 @@ namespace CoffeeCup
                 foreach (CellEntry cell in cellFeed.Entries) {
                     cust_Row.Add(cell.InputValue, cell.Row);
                 }
-            }            
+            }
         }
         private CCupWSEntry() { }
         public int CompareTo(CCupWSEntry other) {
@@ -458,7 +445,7 @@ namespace CoffeeCup
             foreach (WorksheetEntry wsEntry in worksheetFeed.Entries) {
                 EntriesList.Add(new CCupWSEntry(iSpreadsheetService, this, wsEntry));
             }
-        }        
+        }
         private CCupWSFeed() { }
     }
     public class LocalDatabase {
@@ -468,7 +455,7 @@ namespace CoffeeCup
         string pathToFile;
         public Dictionary<string, Customer> Customers { get; private set; }
         public Dictionary<string, Product> Products { get; private set; }
-        public void UpdateDatabase(List<Customer> customerList ) {
+        public void UpdateDatabase(List<Customer> customerList) {
             foreach (Customer customer in customerList) {
                 if (Customers.ContainsKey(customer.Name)) {
                     UpdateEntryValue(customer);
@@ -489,11 +476,11 @@ namespace CoffeeCup
             database.Save(fstream);
             fstream.Close();
         }
-        void UpdateEntryValue(Customer customer){
+        void UpdateEntryValue(Customer customer) {
             Customers[customer.Name] = customer;
             XElement dCustomer;
-            try { 
-                dCustomer = customerDatabase.Elements().Where((c) => c.Attribute("Name").Value == customer.Name).Single(); 
+            try {
+                dCustomer = customerDatabase.Elements().Where((c) => c.Attribute("Name").Value == customer.Name).Single();
             }
             catch {
                 FixDatabase();

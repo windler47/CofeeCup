@@ -1,23 +1,20 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.IO;
 
-namespace CoffeeCup
-{
+namespace CoffeeCup {
     /// <summary>
     /// Логика взаимодействия для DataPicker.xaml
     /// </summary>
-    public partial class DataPicker : Window
-    {
+    public partial class DataPicker : Window {
         CoffeeCup.App app = (CoffeeCup.App)App.Current;
         LocalDatabase db;
         List<Customer> custList = new List<Customer>();
         List<Product> prodList = new List<Product>();
-        public DataPicker(string documentUrl)
-        {
+        public DataPicker(string documentUrl) {
             Dictionary<int, Product> ProductsDic = app.GetGoods();
             Dictionary<int, Customer> CustomersDic = app.GetCustomers();
             app.GetRealisations(CustomersDic, ProductsDic);
@@ -36,9 +33,8 @@ namespace CoffeeCup
             InitializeComponent();
             CustomersDataGrid.DataContext = custList;
             ProductsDataGrid.DataContext = prodList;
-        }    
-        private void AppExit(object sender, RoutedEventArgs e)
-        {
+        }
+        private void AppExit(object sender, RoutedEventArgs e) {
             app.GracefulShutdown();
         }
         private void OkKlick(object sender, RoutedEventArgs e) {
@@ -47,42 +43,32 @@ namespace CoffeeCup
             app.GracefulShutdown();
         }
         #region SINGLE CLICK EDITING
-        private void DataGridCell_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
+        private void DataGridCell_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
             DataGridCell cell = sender as DataGridCell;
-            if (cell != null && !cell.IsEditing && !cell.IsReadOnly)
-            {
-                if (!cell.IsFocused)
-                {
+            if (cell != null && !cell.IsEditing && !cell.IsReadOnly) {
+                if (!cell.IsFocused) {
                     cell.Focus();
                 }
                 DataGrid dataGrid = FindVisualParent<DataGrid>(cell);
-                if (dataGrid != null)
-                {
-                    if (dataGrid.SelectionUnit != DataGridSelectionUnit.FullRow)
-                    {
+                if (dataGrid != null) {
+                    if (dataGrid.SelectionUnit != DataGridSelectionUnit.FullRow) {
                         if (!cell.IsSelected)
                             cell.IsSelected = true;
                     }
-                    else
-                    {
+                    else {
                         DataGridRow row = FindVisualParent<DataGridRow>(cell);
-                        if (row != null && !row.IsSelected)
-                        {
+                        if (row != null && !row.IsSelected) {
                             row.IsSelected = true;
                         }
                     }
                 }
             }
         }
-        static T FindVisualParent<T>(UIElement element) where T : UIElement
-        {
+        static T FindVisualParent<T>(UIElement element) where T : UIElement {
             UIElement parent = element;
-            while (parent != null)
-            {
+            while (parent != null) {
                 T correctlyTyped = parent as T;
-                if (correctlyTyped != null)
-                {
+                if (correctlyTyped != null) {
                     return correctlyTyped;
                 }
 

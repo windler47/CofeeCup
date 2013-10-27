@@ -3,25 +3,21 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Navigation;
 
-namespace CoffeeCup
-{
+namespace CoffeeCup {
     /// <summary>
     /// Логика взаимодействия для AuthWindow.xaml
     /// </summary>
-    public partial class AuthWindow : Window
-    {
+    public partial class AuthWindow : Window {
         CoffeeCup.App app = (CoffeeCup.App)CoffeeCup.App.Current;
         string documentName;
-        public AuthWindow(string gDocName)
-        {
+        public AuthWindow(string gDocName) {
             InitializeComponent();
             string authlink = app.GAuthGetLink();
             AuthUrl.NavigateUri = new Uri(authlink);
             textAuthUrl.Text = authlink;
             documentName = gDocName;
         }
-        private void AuthOKClick(object sender, RoutedEventArgs e)
-        {
+        private void AuthOKClick(object sender, RoutedEventArgs e) {
             app.GAuthStep2(GAccessCode.Text);
             try {
                 DataPicker tDataPicker = new DataPicker(documentName);
@@ -41,7 +37,7 @@ namespace CoffeeCup
             System.Windows.Application.Current.Shutdown();
         }
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e) {
-            System.Diagnostics.Process.Start(e.Uri.ToString());     
+            System.Diagnostics.Process.Start(e.Uri.ToString());
         }
     }
     public class HalfConverter : IValueConverter {

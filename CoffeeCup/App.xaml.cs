@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Security;
 using System.Windows;
@@ -43,9 +42,9 @@ namespace CoffeeCup {
             SpreadsheetFeed feed = null;
             // Make a request to the API and get all spreadsheets.
             try {
-                 feed = GSpreadsheetService.Query(query);
+                feed = GSpreadsheetService.Query(query);
             }
-            catch (Exception e){
+            catch (Exception e) {
                 MessageBox.Show(e.Message);
                 return true;
             }
@@ -142,11 +141,10 @@ namespace CoffeeCup {
                 select fobject;
             foreach (XElement ProductRealisation in obj) {
                 if (warehouseCode != null) {
-                    if ( Convert.ToInt32(ProductRealisation.Elements("Свойство").Where(
+                    if (Convert.ToInt32(ProductRealisation.Elements("Свойство").Where(
                         (e) => { return (string)e.Attribute("Имя") == "Склад"; }
-                        ).Single().Element("Ссылка").Attribute("Нпп").Value) != warehouseCode ) 
-                    {
-                            continue;
+                        ).Single().Element("Ссылка").Attribute("Нпп").Value) != warehouseCode) {
+                        continue;
                     }
                 }
                 bool IsDelited = (from prop in ProductRealisation.Elements("Свойство")
@@ -169,8 +167,8 @@ namespace CoffeeCup {
                     continue;
                 }
                 int buyerCode = (int)(from prop in ProductRealisation.Elements("Свойство")
-                                  where (string)prop.Attribute("Имя") == "Контрагент"
-                                  select prop).Single().Element("Ссылка").Attribute("Нпп");
+                                      where (string)prop.Attribute("Имя") == "Контрагент"
+                                      select prop).Single().Element("Ссылка").Attribute("Нпп");
                 document.Buyer = Customers[buyerCode];
                 IEnumerable<XElement> Records = (from elements in ProductRealisation.Elements("ТабличнаяЧасть")
                                                  where (string)elements.Attribute("Имя") == "Товары"
@@ -191,8 +189,8 @@ namespace CoffeeCup {
                         MessageBox.Show("Error in xml: Sellin product was not found in dictionary");
                     }
                     sp.Price = Convert.ToDouble((from prop in record.Elements()
-                                                where (string)prop.Attribute("Имя") == "Сумма"
-                                                select prop).Single().Element("Значение").Value, new CultureInfo("en-US"));
+                                                 where (string)prop.Attribute("Имя") == "Сумма"
+                                                 select prop).Single().Element("Значение").Value, new CultureInfo("en-US"));
                     document.SellingPositions.Add(sp);
                 }
                 #endregion
@@ -278,21 +276,21 @@ namespace CoffeeCup {
         //    }
         //    return false;
         //}
-        
+
         public bool UploadData() {
             bool success = true;
-            Dictionary<uint,CCupWSEntry> year_ws = new Dictionary<uint,CCupWSEntry>();
-            foreach (CCupWSEntry worksheet in worksheetsFeed.EntriesList){
+            Dictionary<uint, CCupWSEntry> year_ws = new Dictionary<uint, CCupWSEntry>();
+            foreach (CCupWSEntry worksheet in worksheetsFeed.EntriesList) {
                 if (!year_ws.ContainsKey(worksheet.worksheetYear) && worksheet.worksheetYear != 0) {
                     year_ws.Add(worksheet.worksheetYear, worksheet);
-                }               
+                }
             }
             foreach (uint year in realizations.Keys) {
-                if (year_ws.ContainsKey(year)){
+                if (year_ws.ContainsKey(year)) {
                     success = success && year_ws[year].UploadData(realizations[year]);
                 }
                 else {
-                    MessageBox.Show(string.Format("Лист для выгрузки документов за {0} год не найден. Данные за этот год не будут выгружены!",year));
+                    MessageBox.Show(string.Format("Лист для выгрузки документов за {0} год не найден. Данные за этот год не будут выгружены!", year));
                     success = false;
                 }
             }
@@ -301,7 +299,7 @@ namespace CoffeeCup {
         public bool LoadGRefreshToken() {
             FileStream fs;
             try {
-                fs = new FileStream(Path.Combine(appPath,"cc.bin"), FileMode.Open);
+                fs = new FileStream(Path.Combine(appPath, "cc.bin"), FileMode.Open);
             }
             catch {
                 return true;
@@ -317,7 +315,7 @@ namespace CoffeeCup {
         public void GracefulShutdown() {
             SaveGRefreshToken(parameters.RefreshToken);
             this.Shutdown();
-        }    
+        }
         public App() {
             parameters = new OAuth2Parameters();
             parameters.ClientId = CLIENT_ID;

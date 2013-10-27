@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Windows;
 
-namespace CoffeeCup
-{
+namespace CoffeeCup {
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
-    {
+    public partial class MainWindow : Window {
         CoffeeCup.App app = (CoffeeCup.App)CoffeeCup.App.Current;
         bool appHasAuth;
-        public MainWindow()
-        {
+        public MainWindow() {
             InitializeComponent();
             if (!app.LoadGRefreshToken()) appHasAuth = true;
             else appHasAuth = false;
@@ -22,20 +19,17 @@ namespace CoffeeCup
             FolderPath.Text = docPath;
             appHasAuth = false;
         }
-        private void FolderBrowserButtonClick(object sender, RoutedEventArgs e)
-        {
+        private void FolderBrowserButtonClick(object sender, RoutedEventArgs e) {
             //Open Folder Broser Dialog
             Microsoft.Win32.OpenFileDialog dialog = new Microsoft.Win32.OpenFileDialog();
             dialog.DefaultExt = ".xml";
             dialog.Filter = "XML Files (*.xml)|*.xml";
             Nullable<bool> result = dialog.ShowDialog();
-            if (result == true) 
-            {
+            if (result == true) {
                 FolderPath.Text = dialog.FileName;
-            } 
+            }
         }
-        private void MainOKClick(object sender, RoutedEventArgs e)
-        {
+        private void MainOKClick(object sender, RoutedEventArgs e) {
             bool allOk;
             if (app.InitializexmlDoc(FolderPath.Text)) {
                 MessageBox.Show("Произошла ошибка при открытии файла с данными. Проверьте правильность ввода пути к файлу.");
@@ -64,11 +58,10 @@ namespace CoffeeCup
                 }
                 if (allOk) {
                     this.Close();
-                }                
+                }
             }
         }
-        private void AppExit(object sender, RoutedEventArgs e)
-        {
+        private void AppExit(object sender, RoutedEventArgs e) {
             System.Windows.Application.Current.Shutdown();
         }
     }
