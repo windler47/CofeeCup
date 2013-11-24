@@ -7,17 +7,13 @@ namespace CoffeeCup {
     /// </summary>
     public partial class MainWindow : Window {
         CoffeeCup.App app = (CoffeeCup.App)CoffeeCup.App.Current;
-        bool appHasAuth;
         public MainWindow() {
             InitializeComponent();
-            if (!app.LoadGRefreshToken()) appHasAuth = true;
-            else appHasAuth = false;
         }
         public MainWindow(string docUri, string docPath) {
             InitializeComponent();
             DocUri.Text = docUri;
             FolderPath.Text = docPath;
-            appHasAuth = false;
         }
         private void FolderBrowserButtonClick(object sender, RoutedEventArgs e) {
             //Open Folder Broser Dialog
@@ -32,10 +28,10 @@ namespace CoffeeCup {
         private void MainOKClick(object sender, RoutedEventArgs e) {
             bool allOk;
             if (app.InitializexmlDoc(FolderPath.Text)) {
-                MessageBox.Show("Произошла ошибка при открытии файла с данными. Проверьте правильность ввода пути к файлу.");
+                MessageBox.Show("Произошла ошибка при открытии файла с данными. Проверьте правильность пути к файлу.");
             }
             else {
-                if (appHasAuth) {
+                if (!app.LoadGRefreshToken()) {
                     try {
                         DataPicker tdataPicker = new DataPicker(DocUri.Text);
                         tdataPicker.Show();
@@ -47,7 +43,7 @@ namespace CoffeeCup {
                         string caption = "Ошибка!";
                         string messageBoxText = "Возникла ошибка при обращении к Google документу. Одна из вероятных причин возникновения этой ошибки - просроченные данные авторизации. Нажмите Yes чтобы сбросить данные и авторизвать приложение повторно, No чтобы попробовать еще раз с текущими данными.";
                         MessageBoxResult result = MessageBox.Show(messageBoxText, caption, button, icon);
-                        if (result == MessageBoxResult.Yes) appHasAuth = false;
+                        if (result == MessageBoxResult.Yes) app.RemoveSavedRefreshToken();
                         allOk = false;
                     }
                 }

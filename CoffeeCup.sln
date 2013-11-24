@@ -5,16 +5,16 @@ VisualStudioVersion = 12.0.20827.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoffeeCup", "CoffeeCup\CoffeeCup.csproj", "{8CB14844-0BFC-4630-A8B6-4ED15A950039}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{16D1BEC9-569A-4009-879D-339B7792CEC0}"
+Project("{6141683F-8A12-4E36-9623-2EB02B2C2303}") = "CoffeeCupSetup", "CoffeeCupSetup\CoffeeCupSetup.isproj", "{7C8B966B-4764-46D4-8190-F610F05DC0CC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8CB14844-0BFC-4630-A8B6-4ED15A950039} = {8CB14844-0BFC-4630-A8B6-4ED15A950039}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{2A297D03-A859-4FDE-943C-448D84F46D5C}"
 	ProjectSection(SolutionItems) = preProject
 		.nuget\NuGet.Config = .nuget\NuGet.Config
 		.nuget\NuGet.exe = .nuget\NuGet.exe
 		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
-EndProject
-Project("{6141683F-8A12-4E36-9623-2EB02B2C2303}") = "CoffeeCupSetup", "CoffeeCupSetup\CoffeeCupSetup.isproj", "{7C8B966B-4764-46D4-8190-F610F05DC0CC}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8CB14844-0BFC-4630-A8B6-4ED15A950039} = {8CB14844-0BFC-4630-A8B6-4ED15A950039}
 	EndProjectSection
 EndProject
 Global

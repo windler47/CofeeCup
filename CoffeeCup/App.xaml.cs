@@ -28,7 +28,7 @@ namespace CoffeeCup {
         public Dictionary<uint, List<Realization>> realizations;
         public string appPath;
         public string GAuthGetLink() {
-            return OAuthUtil.CreateOAuth2AuthorizationUrl(parameters);
+            return OAuthUtil.CreateOAuth2AuthorizationUrl(parameters);       
         }
         public void GAuthStep2(string accessCode) {
             parameters.AccessCode = accessCode;
@@ -37,51 +37,57 @@ namespace CoffeeCup {
             GSpreadsheetService.RequestFactory = GRequestFactory;
         }
         public bool WorksheetFeedInit(string spredsheetName) {
-            // Instantiate a SpreadsheetQuery object to retrieve spreadsheets.
-            SpreadsheetQuery query = new SpreadsheetQuery();
-            SpreadsheetFeed feed = null;
-            // Make a request to the API and get all spreadsheets.
             try {
-                feed = GSpreadsheetService.Query(query);
+                GOAuth2RequestFactory GRequestFactory = new GOAuth2RequestFactory(null, "CoffeeCup", parameters);
+                GSpreadsheetService.RequestFactory = GRequestFactory;
+                // Instantiate a SpreadsheetQuery object to retrieve spreadsheets.
+                SpreadsheetQuery query = new SpreadsheetQuery();
+                SpreadsheetFeed feed = null;
+                // Make a request to the API and get all spreadsheets.
+                try {
+                    feed = GSpreadsheetService.Query(query);
+                }
+                catch (Exception e) {
+                    MessageBox.Show(e.Message);
+                    return true;
+                }
+                if (feed.Entries.Count == 0) {
+                    MessageBox.Show("No documents found :(");
+                    return true;
+                }
+                SpreadsheetEntry spreadsheet = null;
+                foreach (AtomEntry spr in feed.Entries) {
+                    if (((SpreadsheetEntry)spr).Title.Text == spredsheetName) {
+                        spreadsheet = (SpreadsheetEntry)spr;
+                        break;
+                    }
+                }
+                if (spreadsheet == null) {
+                    MessageBox.Show("Документ с таким названием не найден сриди доступных.");
+                    return true;
+                }
+                worksheetsFeed = new CCupWSFeed(spreadsheet.Worksheets, GSpreadsheetService);
+                return false;
             }
             catch (Exception e) {
-                MessageBox.Show(e.Message);
+                MessageBox.Show("Error in function WorksheetFeedInit:\n" + e.Message);
                 return true;
             }
-            if (feed.Entries.Count == 0) {
-                MessageBox.Show("No documents found :(");
-                return true;
-            }
-            SpreadsheetEntry spreadsheet = null;
-            foreach (AtomEntry spr in feed.Entries) {
-                if (((SpreadsheetEntry)spr).Title.Text == spredsheetName) {
-                    spreadsheet = (SpreadsheetEntry)spr;
-                    break;
-                }
-            }
-            if (spreadsheet == null) {
-                MessageBox.Show("Документ с таким названием не найден сриди доступных.");
-                return true;
-            }
-            worksheetsFeed = new CCupWSFeed(spreadsheet.Worksheets, GSpreadsheetService);
-            return false;
         }
         public bool InitializexmlDoc(string documentPath) {
-            bool result = false;
+            bool result = true;
             try {
                 xmlDoc = XElement.Load(documentPath);
+                result = false;
             }
             catch (ArgumentNullException) {
                 MessageBox.Show("Не указан путь к файлу с данными для выгрузки");
-                result = true;
             }
             catch (SecurityException) {
                 MessageBox.Show("Недостаточно прав для обращения к файлу по адресу " + documentPath);
-                result = true;
             }
             catch (FileNotFoundException) {
                 MessageBox.Show("Файл " + documentPath + "не найден.");
-                result = true;
             }
             return result;
         }
@@ -125,158 +131,90 @@ namespace CoffeeCup {
             return result;
         }
         public void GetRealisations(Dictionary<int, Customer> Customers, Dictionary<int, Product> Products) {
-            int? warehouseCode = null;
-            XElement company = xmlDoc.Elements("Объект").Where((e) => { return (string)e.Attribute("ИмяПравила") == "Организации"; }).Single();
-            if (company.Element("Свойство").Element("Значение").Value == "\"Торговый дом РИКО\"") {
-                XElement warehouse = xmlDoc.Elements("Объект").Where((e) =>
-                {
-                    if ((string)e.Attribute("ИмяПравила") != "Склады") return false;
-                    return e.Element("Свойство").Element("Значение").Value == "Основной склад";
-                }).Single();
-                warehouseCode = Convert.ToInt32(warehouse.Element("Ссылка").Attribute("Нпп").Value);
-            }
-            IEnumerable<XElement> obj =
-                from fobject in xmlDoc.Elements("Объект")
-                where (string)fobject.Attribute("ИмяПравила") == "РеализацияТоваровУслуг"
-                select fobject;
-            foreach (XElement ProductRealisation in obj) {
-                if (warehouseCode != null) {
-                    if (Convert.ToInt32(ProductRealisation.Elements("Свойство").Where(
-                        (e) => { return (string)e.Attribute("Имя") == "Склад"; }
-                        ).Single().Element("Ссылка").Attribute("Нпп").Value) != warehouseCode) {
+            try {
+                int? warehouseCode = null;
+                XElement company = xmlDoc.Elements("Объект").Where((e) => { return (string)e.Attribute("ИмяПравила") == "Организации"; }).Single();
+                if (company.Element("Свойство").Element("Значение").Value == "\"Торговый дом РИКО\"") {
+                    XElement warehouse = xmlDoc.Elements("Объект").Where((e) =>
+                    {
+                        if ((string)e.Attribute("ИмяПравила") != "Склады") return false;
+                        return e.Element("Свойство").Element("Значение").Value == "Основной склад";
+                    }).Single();
+                    warehouseCode = Convert.ToInt32(warehouse.Element("Ссылка").Attribute("Нпп").Value);
+                }
+                IEnumerable<XElement> obj =
+                    from fobject in xmlDoc.Elements("Объект")
+                    where (string)fobject.Attribute("ИмяПравила") == "РеализацияТоваровУслуг"
+                    select fobject;
+                foreach (XElement ProductRealisation in obj) {
+                    if (warehouseCode != null) {
+                        if (Convert.ToInt32(ProductRealisation.Elements("Свойство").Where(
+                            (e) => { return (string)e.Attribute("Имя") == "Склад"; }
+                            ).Single().Element("Ссылка").Attribute("Нпп").Value) != warehouseCode) {
+                            continue;
+                        }
+                    }
+                    bool IsDelited = (from prop in ProductRealisation.Elements("Свойство")
+                                      where (string)prop.Attribute("Имя") == "ПометкаУдаления" && (string)prop.Element("Значение") == "true"
+                                      select prop).Any();
+
+                    bool IsCommited = (from prop in ProductRealisation.Elements("Свойство")
+                                       where (string)prop.Attribute("Имя") == "Проведен" && (string)prop.Element("Значение") == "true"
+                                       select prop).Any();
+                    if (IsDelited || !IsCommited) continue;
+                    Realization document = new Realization();
+                    //TODO: add .single exception handling
+                    try {
+                        document.Date = DateTime.Parse((string)(from prop in ProductRealisation.Element("Ссылка").Elements("Свойство")
+                                                                where (string)prop.Attribute("Имя") == "Дата"
+                                                                select prop).Single().Element("Значение"));
+                    }
+                    catch (FormatException) {
+                        MessageBox.Show("Error while parsing xml date");
                         continue;
                     }
-                }
-                bool IsDelited = (from prop in ProductRealisation.Elements("Свойство")
-                                  where (string)prop.Attribute("Имя") == "ПометкаУдаления" && (string)prop.Element("Значение") == "true"
-                                  select prop).Any();
-
-                bool IsCommited = (from prop in ProductRealisation.Elements("Свойство")
-                                   where (string)prop.Attribute("Имя") == "Проведен" && (string)prop.Element("Значение") == "true"
-                                   select prop).Any();
-                if (IsDelited || !IsCommited) continue;
-                Realization document = new Realization();
-                //TODO: add .single exception handling
-                try {
-                    document.Date = DateTime.Parse((string)(from prop in ProductRealisation.Element("Ссылка").Elements("Свойство")
-                                                            where (string)prop.Attribute("Имя") == "Дата"
-                                                            select prop).Single().Element("Значение"));
-                }
-                catch (FormatException) {
-                    MessageBox.Show("Error while parsing xml date");
-                    continue;
-                }
-                int buyerCode = (int)(from prop in ProductRealisation.Elements("Свойство")
-                                      where (string)prop.Attribute("Имя") == "Контрагент"
-                                      select prop).Single().Element("Ссылка").Attribute("Нпп");
-                document.Buyer = Customers[buyerCode];
-                IEnumerable<XElement> Records = (from elements in ProductRealisation.Elements("ТабличнаяЧасть")
-                                                 where (string)elements.Attribute("Имя") == "Товары"
-                                                 select elements).Single().Elements();
-                #region Selling positions parsing
-                foreach (XElement record in Records) {
-                    SellingPosition sp = new SellingPosition();
-                    sp.Amount = Convert.ToInt32((from prop in record.Elements()
-                                                 where (string)prop.Attribute("Имя") == "Количество"
-                                                 select prop).Single().Element("Значение").Value);
-                    int npp = (int)(from prop in record.Elements()
-                                    where (string)prop.Attribute("Имя") == "Номенклатура"
-                                    select prop).Single().Element("Ссылка").Attribute("Нпп");
-                    try {
-                        sp.Product = Products[npp];
+                    int buyerCode = (int)(from prop in ProductRealisation.Elements("Свойство")
+                                          where (string)prop.Attribute("Имя") == "Контрагент"
+                                          select prop).Single().Element("Ссылка").Attribute("Нпп");
+                    document.Buyer = Customers[buyerCode];
+                    IEnumerable<XElement> Records = (from elements in ProductRealisation.Elements("ТабличнаяЧасть")
+                                                     where (string)elements.Attribute("Имя") == "Товары"
+                                                     select elements).Single().Elements();
+                    #region Selling positions parsing
+                    foreach (XElement record in Records) {
+                        SellingPosition sp = new SellingPosition();
+                        sp.Amount = Convert.ToInt32((from prop in record.Elements()
+                                                     where (string)prop.Attribute("Имя") == "Количество"
+                                                     select prop).Single().Element("Значение").Value);
+                        int npp = (int)(from prop in record.Elements()
+                                        where (string)prop.Attribute("Имя") == "Номенклатура"
+                                        select prop).Single().Element("Ссылка").Attribute("Нпп");
+                        try {
+                            sp.Product = Products[npp];
+                        }
+                        catch (KeyNotFoundException) {
+                            MessageBox.Show("Error in xml: Sellin product was not found in dictionary");
+                        }
+                        sp.Price = Convert.ToDouble((from prop in record.Elements()
+                                                     where (string)prop.Attribute("Имя") == "Сумма"
+                                                     select prop).Single().Element("Значение").Value, new CultureInfo("en-US"));
+                        document.SellingPositions.Add(sp);
                     }
-                    catch (KeyNotFoundException) {
-                        MessageBox.Show("Error in xml: Sellin product was not found in dictionary");
+                    #endregion
+                    if (realizations.ContainsKey((uint)document.Date.Year)) {
+                        realizations[(uint)document.Date.Year].Add(document);
                     }
-                    sp.Price = Convert.ToDouble((from prop in record.Elements()
-                                                 where (string)prop.Attribute("Имя") == "Сумма"
-                                                 select prop).Single().Element("Значение").Value, new CultureInfo("en-US"));
-                    document.SellingPositions.Add(sp);
-                }
-                #endregion
-                if (realizations.ContainsKey((uint)document.Date.Year)) {
-                    realizations[(uint)document.Date.Year].Add(document);
-                }
-                else {
-                    List<Realization> newRealizationList = new List<Realization>();
-                    newRealizationList.Add(document);
-                    realizations.Add((uint)document.Date.Year, newRealizationList);
+                    else {
+                        List<Realization> newRealizationList = new List<Realization>();
+                        newRealizationList.Add(document);
+                        realizations.Add((uint)document.Date.Year, newRealizationList);
+                    }
                 }
             }
+            catch (Exception e) {
+                MessageBox.Show("Error in function 'GetRealisations':\n" + e.Message);
+            }
         }
-        //public bool  GetCustomerData(ref List<Customer> customerList) {
-        //    // Instantiate a SpreadsheetQuery object to retrieve spreadsheets.
-        //    SpreadsheetQuery query = new SpreadsheetQuery();
-        //    // Make a request to the API and get all spreadsheets.
-        //    SpreadsheetFeed feed = GSpreadsheetService.Query(query);
-        //    if (feed.Entries.Count == 0) {
-        //        MessageBox.Show("No documents found :(");
-        //        return true;
-        //    }
-        //    SpreadsheetEntry spreadsheet = null;
-        //    foreach (AtomEntry spr in feed.Entries) {
-        //        if (((SpreadsheetEntry)spr).Title.Text == DocUri) {
-        //            spreadsheet = (SpreadsheetEntry)spr;
-        //            break;
-        //        }
-        //    }
-        //    if (spreadsheet == null) {
-        //        MessageBox.Show("No documents found :(");
-        //        return true;
-        //    }
-        //    WorksheetFeed wsFeed = spreadsheet.Worksheets;
-        //    foreach (WorksheetEntry ws in wsFeed.Entries)
-        //    {
-        //        int wsYear;
-        //        if(int.TryParse(ws.Title.Text,out wsYear)){
-        //            WS_year.Add(wsYear, ws);
-        //        }
-        //        else {
-        //            MessageBox.Show("Название лсита " + ws.Title.Text + " не распознано как год.");
-        //        }
-        //    }
-        //    if (!WS_year.Any()) {
-        //        WS_year.Add(2013, (WorksheetEntry)wsFeed.Entries[0]);
-        //        MessageBox.Show("Лист " + ((WorksheetEntry)wsFeed.Entries[0]).Title.Text + " считается соотвествующим 2013 году!");
-        //    }
-        //    // Fetch the cell feed of the worksheet.
-        //    CellQuery cellQuery = new CellQuery(TargetWS.CellFeedLink);
-        //    cellQuery.MinimumColumn = 1;
-        //    cellQuery.MaximumColumn = 3;
-        //    CellFeed cellFeed = GSpreadsheetService.Query(cellQuery);
-        //    string city = null;
-        //    string region = null;
-        //    foreach (CellEntry cell in cellFeed.Entries) {
-        //        #region Fill in Customer_Row dictionary
-        //        if (cell.Title.Text == "A1") continue;
-        //        switch (cell.Column) {
-        //            case 1: {
-        //                    city = cell.InputValue;
-        //                    break;
-        //                }
-        //            case 2: {
-        //                    region = cell.InputValue;
-        //                    break;
-        //                }
-        //            case 3: {
-        //                Customer tcust = null;
-        //                try {tcust = customerList.Find((e) => { return e.Name == cell.InputValue; });}                            
-        //                catch (ArgumentNullException) {}
-        //                try { tcust = customerList.Find((e) => { return e.altName == cell.InputValue; }); }
-        //                catch (ArgumentNullException) {}
-        //                if (tcust != null) {
-        //                    tcust.City = city;
-        //                    tcust.Region = region;
-        //                    tcust.altName = cell.InputValue;
-        //                }
-        //                break;
-        //            }
-        //        }
-        //        #endregion
-        //    }
-        //    return false;
-        //}
-
         public bool UploadData() {
             bool success = true;
             Dictionary<uint, CCupWSEntry> year_ws = new Dictionary<uint, CCupWSEntry>();
@@ -304,6 +242,10 @@ namespace CoffeeCup {
             catch {
                 return true;
             }
+#if DEBUG 
+            MessageBox.Show("appPtah="+Path.Combine(appPath, "cc.bin"));
+#endif
+            try {
             BinaryReader br = new BinaryReader(fs);
             parameters.RefreshToken = br.ReadString();
             fs.Close();
@@ -311,6 +253,18 @@ namespace CoffeeCup {
             GOAuth2RequestFactory GRequestFactory = new GOAuth2RequestFactory(null, "CoffeeCup", parameters);
             GSpreadsheetService.RequestFactory = GRequestFactory;
             return parameters.AccessToken == null;
+            }
+            catch {
+                File.Delete(Path.Combine(appPath, "cc.bin"));
+                return true;
+            }
+        }
+        public void RemoveSavedRefreshToken() {
+            try {
+                File.Delete(Path.Combine(appPath, "cc.bin"));
+            }
+            // Handle exceptions by type ref = http://msdn.microsoft.com/ru-ru/library/system.io.file.delete(v=vs.110).aspx
+            catch { }
         }
         public void GracefulShutdown() {
             SaveGRefreshToken(parameters.RefreshToken);
